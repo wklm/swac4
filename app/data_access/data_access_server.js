@@ -3,20 +3,29 @@ var express = require('express');
 var http = require('http');
 var app = express();
 var server = app.listen(9000);
-var io = require('socket.io').listen(server);
+var ioServer = require('socket.io').listen(server);
+var ioClient = require('socket.io-client');
 var f2dA = require('fixed-2d-array');
 
-var connection = false;
+var BLSSocket = null;
+var usersQueue = [];
+var userID = 0;
 
-io.on('connection', function (socket) {
-  if (!connection) { // singleton to prevent multiple DAS instances
-    connection = true;
-    var usersQueue = {}
-    console.log('DAS: BLS connected');
-  }
-  else {
-    console.log("multiple co")
-  }
+
+ioServer.on('connection', function (socket) {
+  console.log('DAS: BLS connected');
+  BLSSocket = ioClient.connect('http://localhost:8000');
+  socket.on('new userName submit', function (name) {
+    try {
+      usersQueue.push({
+        key: userID,
+        name: name.name //TODO: fix this
+      })
+      BLSSocket.emit('newUserName ack', JSON.stringify(usersQueue[userID++]));
+    } catch (e) {
+      console.error(e);
+    }
+  })
 });
 
 app.listen(app.get('port'), function () {

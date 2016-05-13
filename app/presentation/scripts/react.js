@@ -1,6 +1,5 @@
 "use strict";
-console.log(io());
-
+var socket = io.connect('http://localhost:8000');
 var Cell = React.createClass({
   getInitialState: function () {
     return {
@@ -129,7 +128,6 @@ var WelcomeScreen = React.createClass({
   }
 });
 
-
 var Root = React.createClass({
   getInitialState: function () {
     return {
@@ -137,17 +135,24 @@ var Root = React.createClass({
     }
   },
 
-  setCurrentUserName: function(name) {
+  componentWillMount: function() {
+    socket.on('newUserName ack', (acknowledgedNewUser) =>
+      console.log(JSON.parse(acknowledgedNewUser))
+    )
+  },
+
+  handleNewUserArrival: function (name) {
     this.setState({
       userName: name
     })
+    socket.emit('new userName submit', name);
   },
 
   render: function () {
     return this.state.userName ? (
       <Grid userName={this.state.userName}/>
     ) : (
-      <WelcomeScreen setUserName={this.setCurrentUserName}/>
+      <WelcomeScreen setUserName={this.handleNewUserArrival}/>
     )
   }
 });

@@ -12,26 +12,33 @@ var cookieParser = require('cookie-parser');
 
 app.use(cookieParser());
 app.use(session({
-    store: new redisStore(),
-    secret: 'sssecret'
+  store: new redisStore(),
+  secret: 'sssecret'
 }));
 app.use(require('express-promise')());
 app.use('/', express.static(path.join(__dirname, '../presentation')));
-
-var matrix = f2dA(7,6,null);
-
-
-app.use(function(req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'no-cache');
-    next();
+app.use(function (req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-cache');
+  next();
 });
 
-ioServer.on('connection', function(socket){
-    console.log('BLS: user connected ');
-    ioClient.connect('http://localhost:9000');
+var DASConnector = null;
+
+ioServer.on('connection', function (socket) {
+  console.log('BLS: user connected ');
+  if (!DASConnector) { // singleton to prevent multiple DAS instances
+    DASConnector = ioClient.connect('http://localhost:9000');
+    DASConnector.emit('new user arrived')
+  }
+  socket.on('new userName submit', function (name) {
+    DASConnector.emit('new userName submit', name);
+  });
+  socket.on('newUserName ack', function (acknowledgedNewUser) {
+    ioServer.sockets.emit('newUserName ack', acknowledgedNewUser);
+  });
 });
 
 app.listen(app.get('port'), function () {
-    console.log('Business Layer Server started: localhost:8000');
+  console.log('Business Layer Server started: localhost:8000');
 });
