@@ -1,20 +1,53 @@
 "use strict";
 //var socket = io.connect('localhost:3000' );
 
+var Cell = React.createClass({
+  getInitialState: function () {
+    return {
+      occupied: false
+    }
+  },
+
+  clickHandler: function (row, col) {
+    console.log("clicked column: " + col + ", row: " + row);
+    this.setState({
+      occupied: true
+    });
+  },
+
+  render: function () {
+    return this.state.occupied ? (
+      <div onClick={() =>
+       this.clickHandler(this.props.x, this.props.y)}>
+        O
+      </div>
+    ) : (
+      <div onClick={() =>
+       this.clickHandler(this.props.x, this.props.y)}>
+        X
+      </div>
+    )
+  }
+})
+
 var Row = React.createClass({
-  trigger: function(col, row) {
-    console.log("clicked column: " + col + ", row: " + row );
+  getInitialState() {
+    return {
+      occupied: null
+    }
   },
   render: function () {
 
 
-    let cells = this.props.row.x.map(cell => {
+    let cells = this.props.row.x.map(x => {
       return (
         <div
           key={Math.random()}
-          onClick={() => this.trigger(this.props.row.y, cell)}
         >
-          {cell}
+          <Cell
+            x={x}
+            y={this.props.row.y}
+          />
         </div>
       )
     })
@@ -38,7 +71,7 @@ var Grid = React.createClass({
   componentWillMount: function () {
     for (let i = 0; i < 7;) { // columns
       this.state.matrix[i] = {
-        x:  Array.apply(null, {length: 6}).map(Number.call, Number), // rows
+        x: Array.apply(null, {length: 6}).map(Number.call, Number), // rows
         y: i++
       }
     }
@@ -53,7 +86,7 @@ var Grid = React.createClass({
       )
     })
     return (
-      <table>
+      <table className="grid">
         {rows}
       </table>
     )
