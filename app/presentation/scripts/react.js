@@ -41,8 +41,6 @@ var Column = React.createClass({
     }
   },
   render: function () {
-
-
     let cells = this.props.row.x.map(x => {
       return (
         <div
@@ -97,14 +95,59 @@ var Grid = React.createClass({
   }
 });
 
+var WelcomeScreen = React.createClass({
+  getInitialState: function () {
+    return {name: ''};
+  },
+
+  handleNameChange: function (e) {
+    this.setState({name: e.target.value});
+  },
+
+  handleSubmit: function (e) {
+    e.preventDefault();
+    var name = this.state.name.trim();
+    if (!name) return;
+    this.props.setUserName({name: name});
+    this.setState({name: ''});
+  },
+
+  render: function () {
+    return (
+      <div className="row">
+        <form className="small-12 columns" onSubmit={this.handleSubmit}>
+          <input
+            type="text"
+            placeholder="hey, what's your name?"
+            value={this.state.name}
+            onChange={this.handleNameChange}
+          />
+          <input type="submit" value="let's play"/>
+        </form>
+      </div>
+    );
+  }
+});
+
 
 var Root = React.createClass({
   getInitialState: function () {
-    return {}
+    return {
+      userName: null
+    }
   },
+
+  setCurrentUserName: function(name) {
+    this.setState({
+      userName: name
+    })
+  },
+
   render: function () {
-    return (
-      <Grid />
+    return this.state.userName ? (
+      <Grid userName={this.state.userName}/>
+    ) : (
+      <WelcomeScreen setUserName={this.setCurrentUserName}/>
     )
   }
 });
