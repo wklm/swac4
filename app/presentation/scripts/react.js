@@ -1,5 +1,5 @@
 "use strict";
-//var socket = io.connect('localhost:3000' );
+console.log(io());
 
 var Cell = React.createClass({
   getInitialState: function () {
@@ -17,20 +17,24 @@ var Cell = React.createClass({
 
   render: function () {
     return this.state.occupied ? (
-      <div onClick={() =>
-       this.clickHandler(this.props.x, this.props.y)}>
+      <div
+        className="cell"
+        onClick={() =>
+          this.clickHandler(this.props.x, this.props.y)}>
         O
       </div>
     ) : (
-      <div onClick={() =>
-       this.clickHandler(this.props.x, this.props.y)}>
+      <div
+        className="cell"
+        onClick={() =>
+          this.clickHandler(this.props.x, this.props.y)}>
         X
       </div>
     )
   }
 })
 
-var Row = React.createClass({
+var Column = React.createClass({
   getInitialState() {
     return {
       occupied: null
@@ -53,7 +57,7 @@ var Row = React.createClass({
     })
 
     return (
-      <div>
+      <div className="table-column">
         {cells}
       </div>
     )
@@ -80,13 +84,13 @@ var Grid = React.createClass({
   render: function () {
     let rows = this.state.matrix.map(row => {
       return (
-        <td key={row.y}>
-          <Row row={row}/>
-        </td>
+        <tr key={row.y} className="small-1 columns left">
+          <Column row={row}/>
+        </tr>
       )
     })
     return (
-      <table className="grid">
+      <table className="grid row">
         {rows}
       </table>
     )

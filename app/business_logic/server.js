@@ -1,14 +1,14 @@
 var path = require('path');
 var express = require('express');
-var bodyParser = require('body-parser');
-var io = require('socket.io').listen(server);
+var http = require('http');
 var app = express();
+var server = app.listen(8000);
+var io = require('socket.io').listen(server);
 
-app.set('port', (process.env.PORT || 3000));
 
 app.use('/', express.static(path.join(__dirname, '../presentation')));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+
+
 
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,6 +16,6 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.listen(app.get('port'), function() {
-    console.log('Server started: http://localhost:' + app.get('port') + '/');
-})
+io.on('connection', function(socket){
+    console.log('a user connected');
+});
