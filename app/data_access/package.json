@@ -1,7 +1,7 @@
 {
   "name": "swa_connect_four",
   "version": "0.0.1",
-  "description": "business layer",
+  "description": "data access",
   "main": "server.js",
   "dependencies": {
     "express": "^4.13.4",
@@ -12,7 +12,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "test",
-    "start": "node business_layer_server.js"
+    "start": "node data_access_server.js"
   },
   "repository": {
     "type": "git",
