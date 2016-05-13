@@ -3,7 +3,8 @@ var express = require('express');
 var http = require('http');
 var app = express();
 var server = app.listen(8000);
-var io = require('socket.io').listen(server);
+var ioServer = require('socket.io').listen(server);
+var ioClient = require('socket.io-client');
 var session = require('express-session');
 var f2dA = require('fixed-2d-array');
 var redisStore = require('connect-redis')(session);
@@ -26,8 +27,9 @@ app.use(function(req, res, next) {
     next();
 });
 
-io.on('connection', function(socket){
-    console.log('a user connected');
+ioServer.on('connection', function(socket){
+    console.log('BLS: user connected ');
+    ioClient.connect('http://localhost:9000');
 });
 
 app.listen(app.get('port'), function () {
