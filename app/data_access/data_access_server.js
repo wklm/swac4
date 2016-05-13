@@ -9,6 +9,7 @@ var f2dA = require('fixed-2d-array');
 
 var BLSSocket = null;
 var usersQueue = [];
+var gameRooms = [];
 var userID = 0;
 
 
@@ -17,10 +18,12 @@ ioServer.on('connection', function (socket) {
   BLSSocket = ioClient.connect('http://localhost:8000');
   socket.on('new userName submit', function (name) {
     try {
-      usersQueue.push({
-        key: userID,
-        name: name.name //TODO: fix this
-      })
+      if (!usersQueue.name) {
+        usersQueue.push({
+          id: userID,
+          name: name.name //TODO: fix this
+        })
+      }
       BLSSocket.emit('newUserName ack', JSON.stringify(usersQueue[userID++]));
     } catch (e) {
       console.error(e);

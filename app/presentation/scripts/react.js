@@ -132,20 +132,22 @@ var Root = React.createClass({
   getInitialState: function () {
     return {
       userName: null,
-      acknowledged: false
+      acknowledged: false,
+      hasPair: false
     }
   },
 
   componentWillMount: function () {
     socket.on('newUserName ack', (ack) =>
-      this.nameAckHandeler(ack)
+      this.nameAckHandeler(JSON.parse(ack))
     )
   },
 
   nameAckHandeler: function (ack) {
     console.log(ack)
     this.setState({
-      acknowledged: true
+      acknowledged: true,
+      hasPair: ack.id % 2
     })
   },
 
@@ -158,7 +160,7 @@ var Root = React.createClass({
 
   render: function () {
     return this.state.userName ? (
-      <Loader loaded={this.state.acknowledged}>
+      <Loader loaded={this.state.acknowledged && this.state.hasPair}>
         <Grid userName={this.state.userName}/>
       </Loader>
     ) : (
