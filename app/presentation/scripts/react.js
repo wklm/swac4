@@ -131,14 +131,22 @@ var WelcomeScreen = React.createClass({
 var Root = React.createClass({
   getInitialState: function () {
     return {
-      userName: null
+      userName: null,
+      acknowledged: false
     }
   },
 
-  componentWillMount: function() {
-    socket.on('newUserName ack', (acknowledgedNewUser) =>
-      console.log(JSON.parse(acknowledgedNewUser))
+  componentWillMount: function () {
+    socket.on('newUserName ack', (ack) =>
+      this.nameAckHandeler(ack)
     )
+  },
+
+  nameAckHandeler: function (ack) {
+    console.log(ack)
+    this.setState({
+      acknowledged: true
+    })
   },
 
   handleNewUserArrival: function (name) {
@@ -150,7 +158,9 @@ var Root = React.createClass({
 
   render: function () {
     return this.state.userName ? (
-      <Grid userName={this.state.userName}/>
+      <Loader loaded={this.state.acknowledged}>
+        <Grid userName={this.state.userName}/>
+      </Loader>
     ) : (
       <WelcomeScreen setUserName={this.handleNewUserArrival}/>
     )
