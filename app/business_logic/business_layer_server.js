@@ -46,7 +46,7 @@ ioServer.on('connection', function (socket) {
       let gameRoom = {
         players: activeUserPool.slice(-2),
         id: currentRoomID++,
-        grid: new f2dA(7,6,null),
+        grid: new f2dA(7, 6, null)
       }
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.emit("room initialized", gameRoom.id);
@@ -55,8 +55,15 @@ ioServer.on('connection', function (socket) {
       socket.to(user.socket).emit("waiting for opponent");
     }
   });
-  socket.on("user click", function (roomID, userID, col, row) {
-    //gameRoomsPool.get(roomID).grid.set(col,row, userID);
+  socket.on("user click", function (room, userID, col, row) {
+    try {
+      gameRoomsPool[room].grid.validateCoords(col, row); // err thrown if out of range
+      gameRoomsPool[room].grid.set(col, row, userID);
+      //console.log(gameRoomsPool[room].grid.getNeighbours(col, row, 3));
+      console.log(gameRoomsPool[room].grid);
+    } catch (e) {
+      console.error(e);
+    }
   });
 });
 

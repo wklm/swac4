@@ -8,11 +8,11 @@ var Cell = React.createClass({
   },
 
   clickHandler: function (row, col) {
-    console.log("clicked column: " + col + ", row: " + row);
+    console.log("clicked column: " + col + ", row: " + row, " user: ", this.props.userID);
     this.setState({
       occupied: true
     });
-    socket.emit('user click', this.props.currentRoom, this.props.userID, col, row); // make move
+    socket.emit('user click', this.props.currentRoom, socket.id, col, row); // make move
   },
 
   render: function () {
@@ -50,7 +50,6 @@ var Column = React.createClass({
             x={x}
             y={this.props.row.y}
             currentRoom={this.props.currentRoom}
-            userID={this.props.userID}
           />
         </div>
       )
@@ -88,7 +87,6 @@ var Grid = React.createClass({
           <Column
             row={row}
             currentRoom={this.props.currentRoom}
-            userID={this.props.userID}
           />
         </tr>
       )
@@ -166,7 +164,6 @@ var Root = React.createClass({
   },
 
   connectToGameRoom: function (roomID) {
-    console.log("doszlo cos");
     this.setState({
       currentGameRoom: roomID
     });
@@ -184,7 +181,6 @@ var Root = React.createClass({
       <Loader loaded={this.state.acknowledged && this.state.currentGameRoom != null}>
         <Grid
           userName={this.state.userName}
-          userID={this.state.userID}
           currentRoom={this.state.currentGameRoom}
         />
       </Loader>
