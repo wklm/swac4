@@ -1,3 +1,4 @@
+"use strict";
 var path = require('path');
 var express = require('express');
 var http = require('http');
@@ -24,9 +25,11 @@ app.use(function (req, res, next) {
 });
 
 var DASConnector = null;
+var activeUserPool = [];
+var gameRoomsPool = [];
+var currentRoomID = 0;
 
 ioServer.on('connection', function (socket) {
-  console.log('BLS: user connected ');
   if (!DASConnector) { // singleton to prevent multiple DAS instances
     DASConnector = ioClient.connect('http://localhost:9000');
     DASConnector.emit('new user arrived')
@@ -36,6 +39,24 @@ ioServer.on('connection', function (socket) {
   });
   socket.on('newUserName ack', function (acknowledgedNewUser) {
     ioServer.sockets.emit('newUserName ack', acknowledgedNewUser);
+  });
+  socket.on('user will join room', function (user) {
+    activeUserPool.push(user);
+    if (!user.id % 2) {
+      let gameRoom = {
+        players: activeUserPool.slice(-2),
+        id: currentRoomID++,
+        grid: new f2dA(7,6,null),
+      }
+      gameRoomsPool.push(gameRoom);
+      ioServer.to(gameRoom.players[0].socket.emit("room initialized", gameRoom.id)); // socket id
+      gameRoom = null;
+    } else {
+      ioServer.to(user.socket).emit("waiting for opponent");
+    }
+  });
+  socket.on("user click", function (roomID, userID, col, row) {
+    gameRoomsPool.get(roomID).grid.set(col,row, userID);
   });
 });
 

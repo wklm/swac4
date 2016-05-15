@@ -12,6 +12,7 @@ var Cell = React.createClass({
     this.setState({
       occupied: true
     });
+    socket.emit('user click', this.props.currentRoom, this.props.userID, col, row); // make move
   },
 
   render: function () {
@@ -48,6 +49,8 @@ var Column = React.createClass({
           <Cell
             x={x}
             y={this.props.row.y}
+            currentRoom={this.props.currentRoom}
+            userID={this.props.userID}
           />
         </div>
       )
@@ -82,7 +85,11 @@ var Grid = React.createClass({
     let rows = this.state.matrix.map(row => {
       return (
         <tr key={row.y} className="small-1 columns left">
-          <Column row={row}/>
+          <Column
+            row={row}
+            currentRoom={this.props.currentRoom}
+            userID={this.props.userID}
+          />
         </tr>
       )
     })
@@ -132,23 +139,35 @@ var Root = React.createClass({
   getInitialState: function () {
     return {
       userName: null,
+      userID: null,
       acknowledged: false,
-      hasPair: false
+      currentGameRoom: null
     }
   },
 
-  componentWillMount: function () {
-    socket.on('newUserName ack', (ack) =>
-      this.nameAckHandeler(JSON.parse(ack))
-    )
+  componentWillMount: function () { // messages handler started on app load
+    socket.on('newUserName ack', (ack) => // userName accepted
+      this.nameAckHandler(JSON.parse(ack))
+    );
+    socket.on('newUserName ack', (roomID) => // connected to game room
+      this.connectToGameRoom(roomID)
+    );
   },
 
-  nameAckHandeler: function (ack) {
-    console.log(ack)
+  nameAckHandler: function (ack) {
     this.setState({
       acknowledged: true,
-      hasPair: ack.id % 2
-    })
+      userID: ack.id,
+    });
+    let user = ack;
+    ack.socket = socket.id;
+    socket.emit('user will join room', user)
+  },
+
+  connectToGameRoom: function (roomID) {
+    this.setState({
+      currentGameRoom: roomID
+    });
   },
 
   handleNewUserArrival: function (name) {
@@ -160,8 +179,12 @@ var Root = React.createClass({
 
   render: function () {
     return this.state.userName ? (
-      <Loader loaded={this.state.acknowledged && this.state.hasPair}>
-        <Grid userName={this.state.userName}/>
+      <Loader loaded={this.state.acknowledged && this.state.currentGameRoom != null}>
+        <Grid
+          userName={this.state.userName}
+          userID={this.state.userID}
+          currentRoom={this.state.currentGameRoom}
+        />
       </Loader>
     ) : (
       <WelcomeScreen setUserName={this.handleNewUserArrival}/>
