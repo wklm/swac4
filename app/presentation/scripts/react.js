@@ -149,7 +149,8 @@ var Root = React.createClass({
     socket.on('newUserName ack', (ack) => // userName accepted
       this.nameAckHandler(JSON.parse(ack))
     );
-    socket.on('newUserName ack', (roomID) => // connected to game room
+
+    socket.on('room initialized', (roomID) =>
       this.connectToGameRoom(roomID)
     );
   },
@@ -159,12 +160,13 @@ var Root = React.createClass({
       acknowledged: true,
       userID: ack.id,
     });
-    let user = ack;
     ack.socket = socket.id;
+    let user = ack;
     socket.emit('user will join room', user)
   },
 
   connectToGameRoom: function (roomID) {
+    console.log("doszlo cos");
     this.setState({
       currentGameRoom: roomID
     });

@@ -42,21 +42,21 @@ ioServer.on('connection', function (socket) {
   });
   socket.on('user will join room', function (user) {
     activeUserPool.push(user);
-    if (!user.id % 2) {
+    if (user.id % 2) {
       let gameRoom = {
         players: activeUserPool.slice(-2),
         id: currentRoomID++,
         grid: new f2dA(7,6,null),
       }
       gameRoomsPool.push(gameRoom);
-      ioServer.to(gameRoom.players[0].socket.emit("room initialized", gameRoom.id)); // socket id
+      ioServer.sockets.emit("room initialized", gameRoom.id);
       gameRoom = null;
     } else {
-      ioServer.to(user.socket).emit("waiting for opponent");
+      socket.to(user.socket).emit("waiting for opponent");
     }
   });
   socket.on("user click", function (roomID, userID, col, row) {
-    gameRoomsPool.get(roomID).grid.set(col,row, userID);
+    //gameRoomsPool.get(roomID).grid.set(col,row, userID);
   });
 });
 
