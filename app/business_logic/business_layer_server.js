@@ -46,8 +46,10 @@ ioServer.on('connection', function (socket) {
       let gameRoom = {
         players: activeUserPool.slice(-2),
         id: currentRoomID++,
-        grid: new f2dA(7, 6, null)
-      }
+        grid: new f2dA(7, 7, null),
+        currentPlayerMove: null,
+        winner: null
+      } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.emit("room initialized", gameRoom.id);
       gameRoom = null;
@@ -57,9 +59,32 @@ ioServer.on('connection', function (socket) {
   });
   socket.on("user click", function (room, userSocketID, col, row) {
     try {
-      gameRoomsPool[room].grid.set(col, row, userSocketID);
-      //console.log(gameRoomsPool[room].grid.getNeighbours(col, row, 3));
-      ioServer.sockets.emit("grid update", col, row, userSocketID, room);
+      let rowIndexArr = [], colIndexArr = [];
+      if (!gameRoomsPool[room].grid.get(row, col)) {
+        gameRoomsPool[room].grid.set(row, col, userSocketID);
+        if ((gameRoomsPool[room].grid.getRow(row).filter(function (value) {
+            return value === userSocketID
+          }).length === 4) || (
+          gameRoomsPool[room].grid.getColumn(col).filter(function (value) {
+            return value === userSocketID
+          }).length === 4)) {
+          for (let i in gameRoomsPool[room].grid.getRow(row)) {
+            if (gameRoomsPool[room].grid.getRow(row)[i] === userSocketID) {
+              rowIndexArr.push(i)
+            }
+          }
+          for (let i in gameRoomsPool[room].grid.getColumn(col)) {
+            if (gameRoomsPool[room].grid.getColumn(col)[i] === userSocketID) {
+              colIndexArr.push(i)
+            }
+          }
+          if ((rowIndexArr.length === 4 && rowIndexArr[3] - rowIndexArr[0] === 3) ||
+               colIndexArr.length === 4 && colIndexArr[3] - colIndexArr[0] === 3) {
+            console.log("winner!")
+          }
+        }
+        ioServer.sockets.emit("grid update", col, row, userSocketID, room);
+      }
     } catch (e) {
       console.error(e);
     }
