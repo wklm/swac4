@@ -55,12 +55,11 @@ ioServer.on('connection', function (socket) {
       socket.to(user.socket).emit("waiting for opponent");
     }
   });
-  socket.on("user click", function (room, userID, col, row) {
+  socket.on("user click", function (room, userSocketID, col, row) {
     try {
-      gameRoomsPool[room].grid.validateCoords(col, row); // err thrown if out of range
-      gameRoomsPool[room].grid.set(col, row, userID);
+      gameRoomsPool[room].grid.set(col, row, userSocketID);
       //console.log(gameRoomsPool[room].grid.getNeighbours(col, row, 3));
-      console.log(gameRoomsPool[room].grid);
+      ioServer.sockets.emit("grid update", col, row, userSocketID, room);
     } catch (e) {
       console.error(e);
     }

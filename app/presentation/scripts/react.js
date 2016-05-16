@@ -3,16 +3,26 @@ var socket = io.connect('http://localhost:8000');
 var Cell = React.createClass({
   getInitialState: function () {
     return {
-      occupied: false
+      occupied: false,
+      lastMove: null
     }
   },
 
-  clickHandler: function (row, col) {
-    console.log("clicked column: " + col + ", row: " + row, " user: ", this.props.userID);
+  componentWillMount: function() {
+    socket.on('grid update', (col, row, opponentID, roomID) =>
+      console.log(col, row, opponentID, roomID)
+    );
+  },
+
+  clickHandler: function (row, col, user) {
+    console.log("clicked column: " + col + ", row: " + row, " user: ", user);
     this.setState({
-      occupied: true
+      occupied: true,
+      lastMove: user
     });
-    socket.emit('user click', this.props.currentRoom, socket.id, col, row); // make move
+    if (user === "me") {
+      socket.emit('user click', this.props.currentRoom, socket.id, col, row); // make move
+    }
   },
 
   render: function () {
@@ -20,14 +30,14 @@ var Cell = React.createClass({
       <div
         className="cell"
         onClick={() =>
-          this.clickHandler(this.props.x, this.props.y)}>
-        O
+          this.clickHandler(this.props.x, this.props.y, "me")}>
+        {this.state.lastMove}
       </div>
     ) : (
       <div
         className="cell"
         onClick={() =>
-          this.clickHandler(this.props.x, this.props.y)}>
+          this.clickHandler(this.props.x, this.props.y, "me")}>
         X
       </div>
     )
@@ -134,7 +144,7 @@ var WelcomeScreen = React.createClass({
 });
 
 var Root = React.createClass({
-  getInitialState: function () {
+  getInitialState: function () {  // should be session variables
     return {
       userName: null,
       userID: null,
