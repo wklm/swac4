@@ -4,40 +4,44 @@ var Cell = React.createClass({
   getInitialState: function () {
     return {
       occupied: false,
-      lastMove: null
+      lastMove: null,
+      value: null
     }
   },
 
   componentWillMount: function() {
-    socket.on('grid update', (col, row, opponentID, roomID) =>
-      console.log(col, row, opponentID, roomID)
+    socket.on('grid update', (col, row, playerID, roomID) =>
+      this.update(col, row, playerID, roomID)
     );
+  },
+
+  update: function(col, row, playerID, roomID) {
+    if (col === this.props.y && row === this.props.x) {
+      this.setState({
+        occupied: true,
+        value: playerID
+      })
+    }
   },
 
   clickHandler: function (row, col, user) {
     console.log("clicked column: " + col + ", row: " + row, " user: ", user);
-    this.setState({
-      occupied: true,
-      lastMove: user
-    });
-    if (user === "me") {
       socket.emit('user click', this.props.currentRoom, socket.id, col, row); // make move
-    }
   },
 
-  render: function () {
+  render: function () { // first char of userSocketID is displayed on player's click
     return this.state.occupied ? (
       <div
         className="cell"
         onClick={() =>
-          this.clickHandler(this.props.x, this.props.y, "me")}>
-        {this.state.lastMove}
+          this.clickHandler(this.props.x, this.props.y)}>
+        {this.state.value === socket.id ? "me" : "op"}
       </div>
     ) : (
       <div
         className="cell"
         onClick={() =>
-          this.clickHandler(this.props.x, this.props.y, "me")}>
+          this.clickHandler(this.props.x, this.props.y)}>
         X
       </div>
     )
