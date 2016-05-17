@@ -165,6 +165,10 @@ var Root = React.createClass({
     socket.on('room initialized', (roomID) =>
       this.connectToGameRoom(roomID)
     );
+
+    socket.on('winner', (user, room) => {
+      alert("winner", user);
+    });
   },
 
   nameAckHandler: function (ack) {

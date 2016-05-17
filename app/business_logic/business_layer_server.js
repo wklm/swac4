@@ -80,11 +80,16 @@ ioServer.on('connection', function (socket) {
           }
           if ((rowIndexArr.length === 4 && rowIndexArr[3] - rowIndexArr[0] === 3) ||
             colIndexArr.length === 4 && colIndexArr[3] - colIndexArr[0] === 3) {
-            console.log("winner!")
+            gameRoomsPool[room].winner = userSocketID;
           }
         }
+        if (checkDiagonal(gameRoomsPool[room].grid, col, row, userSocketID)) {
+          gameRoomsPool[room].winner = userSocketID;
+        };
         ioServer.sockets.emit("grid update", col, row, userSocketID, room);
-        getDiagonal(gameRoomsPool[room].grid, col, row); // <---
+        if (gameRoomsPool[room].winner) {
+          ioServer.sockets.emit("winner", userSocketID, room);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -97,18 +102,26 @@ app.listen(app.get('port'), function () {
 });
 
 
-function getDiagonal(matrix, col, row) {
+function checkDiagonal(matrix, col, row, userSocketID) {
   let resultArray = [];
   let bCol = 0, bRow = 0;
-  if (col !== row) {
-    try {
-      while (matrix.getColumn(--col) && matrix.getRow(--row)) {
-        bCol = col;
-        bRow = row;
-      }
-    } catch (e) {
-      console.log(bCol, bRow);
+
+  if (col > row) {
+    bCol = col - row;
+  } else if (col < row) {
+    bRow = row - col;
+  }
+  try {
+    while (matrix.getColumn(bCol) && matrix.getRow(bRow)) {
+      resultArray.push(matrix.get(bRow, bCol));
+      matrix.validateCoords(bRow++, bCol++);
+    }
+  } catch (outOfRange) {
+    if (resultArray.filter(function (value) {
+        return value === userSocketID
+      }).length === 4) {
+      return true;
     }
   }
-
+  return false;
 }
