@@ -59,34 +59,13 @@ ioServer.on('connection', function (socket) {
   });
   socket.on("user click", function (room, userSocketID, col, row) {
     try {
-      let rowIndexArr = [], colIndexArr = [];
       if (!gameRoomsPool[room].grid.get(row, col)) {
         gameRoomsPool[room].grid.set(row, col, userSocketID);
-        if ((gameRoomsPool[room].grid.getRow(row).filter(function (value) {
-            return value === userSocketID
-          }).length === 4) || (
-          gameRoomsPool[room].grid.getColumn(col).filter(function (value) {
-            return value === userSocketID
-          }).length === 4)) {
-          for (let i in gameRoomsPool[room].grid.getRow(row)) {
-            if (gameRoomsPool[room].grid.getRow(row)[i] === userSocketID) {
-              rowIndexArr.push(i)
-            }
-          }
-          for (let i in gameRoomsPool[room].grid.getColumn(col)) {
-            if (gameRoomsPool[room].grid.getColumn(col)[i] === userSocketID) {
-              colIndexArr.push(i)
-            }
-          }
-          if ((rowIndexArr.length === 4 && rowIndexArr[3] - rowIndexArr[0] === 3) ||
-            colIndexArr.length === 4 && colIndexArr[3] - colIndexArr[0] === 3) {
-            gameRoomsPool[room].winner = userSocketID;
-          }
-        }
-        if (checkDiagonal(gameRoomsPool[room].grid, col, row, userSocketID)) {
-          gameRoomsPool[room].winner = userSocketID;
-        };
+        gameRoomsPool[room].winner =
+          checkResult(gameRoomsPool[room].grid, col, row, userSocketID, room);
+
         ioServer.sockets.emit("grid update", col, row, userSocketID, room);
+
         if (gameRoomsPool[room].winner) {
           ioServer.sockets.emit("winner", userSocketID, room);
         }
@@ -102,10 +81,40 @@ app.listen(app.get('port'), function () {
 });
 
 
+function checkResult(matrix, col, row, userSocketID, room) {
+  let rowIndexArr = [], colIndexArr = [];
+
+  if ((matrix.getRow(row).filter(function (value) {
+      return value === userSocketID
+    }).length === 4) || (
+    matrix.getColumn(col).filter(function (value) {
+      return value === userSocketID
+    }).length === 4)) {
+    for (let i in matrix.getRow(row)) {
+      if (matrix.getRow(row)[i] === userSocketID) {
+        rowIndexArr.push(i)
+      }
+    }
+    for (let i in matrix.getColumn(col)) {
+      if (matrix.getColumn(col)[i] === userSocketID) {
+        colIndexArr.push(i)
+      }
+    }
+    if ((rowIndexArr[3] - rowIndexArr[0] === 3) ||
+      colIndexArr[3] - colIndexArr[0] === 3) {
+      return userSocketID;
+    }
+  }
+  if (checkDiagonal(gameRoomsPool[room].grid, col, row, userSocketID)) {
+    return userSocketID;
+  };
+  return null;
+}
+
+
 function checkDiagonal(matrix, col, row, userSocketID) {
   let resultArray = [];
   let bCol = 0, bRow = 0;
-
   if (col > row) {
     bCol = col - row;
   } else if (col < row) {
