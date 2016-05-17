@@ -79,11 +79,12 @@ ioServer.on('connection', function (socket) {
             }
           }
           if ((rowIndexArr.length === 4 && rowIndexArr[3] - rowIndexArr[0] === 3) ||
-               colIndexArr.length === 4 && colIndexArr[3] - colIndexArr[0] === 3) {
+            colIndexArr.length === 4 && colIndexArr[3] - colIndexArr[0] === 3) {
             console.log("winner!")
           }
         }
         ioServer.sockets.emit("grid update", col, row, userSocketID, room);
+        getDiagonal(gameRoomsPool[room].grid, col, row); // <---
       }
     } catch (e) {
       console.error(e);
@@ -94,3 +95,20 @@ ioServer.on('connection', function (socket) {
 app.listen(app.get('port'), function () {
   console.log('Business Layer Server started: localhost:8000');
 });
+
+
+function getDiagonal(matrix, col, row) {
+  let resultArray = [];
+  let bCol = 0, bRow = 0;
+  if (col !== row) {
+    try {
+      while (matrix.getColumn(--col) && matrix.getRow(--row)) {
+        bCol = col;
+        bRow = row;
+      }
+    } catch (e) {
+      console.log(bCol, bRow);
+    }
+  }
+
+}
