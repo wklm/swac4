@@ -47,7 +47,7 @@ ioServer.on('connection', function (socket) {
         players: activeUserPool.slice(-2),
         id: currentRoomID++,
         grid: new f2dA(7, 7, null),
-        currentPlayerMove: null,
+        currentPlayerMove: 1,
         winner: null
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
@@ -59,7 +59,11 @@ ioServer.on('connection', function (socket) {
   });
   socket.on("user click", function (room, userSocketID, col, row) {
     try {
-      if (!gameRoomsPool[room].grid.get(row, col)) {
+      if (userSocketID ===
+        gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
+        ioServer.sockets.emit("opponent's turn");
+        return;
+      } else if (!gameRoomsPool[room].grid.get(row, col)) {
         gameRoomsPool[room].grid.set(row, col, userSocketID);
         gameRoomsPool[room].winner =
           checkResult(gameRoomsPool[room].grid, col, row, userSocketID, room);
@@ -67,9 +71,10 @@ ioServer.on('connection', function (socket) {
         ioServer.sockets.emit("grid update", col, row, userSocketID, room);
 
         if (gameRoomsPool[room].winner) {
-          ioServer.sockets.emit("winner", userSocketID, room);
+          ioServer.sockets.emit("winner", userSocketID);
         }
       }
+      gameRoomsPool[room].currentPlayerMove = +!gameRoomsPool[room].currentPlayerMove;
     } catch (e) {
       console.error(e);
     }
@@ -83,7 +88,6 @@ app.listen(app.get('port'), function () {
 
 function checkResult(matrix, col, row, userSocketID, room) {
   let rowIndexArr = [], colIndexArr = [];
-
   if ((matrix.getRow(row).filter(function (value) {
       return value === userSocketID
     }).length === 4) || (
@@ -107,7 +111,8 @@ function checkResult(matrix, col, row, userSocketID, room) {
   }
   if (checkDiagonal(gameRoomsPool[room].grid, col, row, userSocketID)) {
     return userSocketID;
-  };
+  }
+  ;
   return null;
 }
 

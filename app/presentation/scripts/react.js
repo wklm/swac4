@@ -166,8 +166,11 @@ var Root = React.createClass({
       this.connectToGameRoom(roomID)
     );
 
-    socket.on('winner', (user, room) => {
+    socket.on('winner', (user) => { // on win
       alert("winner", user);
+    });
+    socket.on('opponent\'s turn', () => { // on win
+      console.log("wait for your turn!");
     });
   },
 
