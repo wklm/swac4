@@ -10,6 +10,7 @@ var session = require('express-session');
 var f2dA = require('fixed-2d-array');
 var redisStore = require('connect-redis')(session);
 var cookieParser = require('cookie-parser');
+var result = require('./result-check.js');
 
 app.use(cookieParser());
 app.use(session({
@@ -24,16 +25,21 @@ app.use(function (req, res, next) {
   next();
 });
 
-var DASConnector = null;
+var DASConnector = ioClient.connect('http://localhost:9000');
 var activeUserPool = [];
 var gameRoomsPool = [];
 var currentRoomID = 0;
 
 ioServer.on('connection', function (socket) {
-  if (!DASConnector) { // singleton to prevent multiple DAS instances
-    DASConnector = ioClient.connect('http://localhost:9000');
-    DASConnector.emit('new user arrived')
-  }
+  DASConnector.emit('new user arrived');
+
+  socket.on('subscribe', function (data) {
+    socket.join(data.room);
+  })
+
+  socket.on('unsubscribe', function (data) {
+    socket.leave(data.room);
+  })
 
   socket.on('new userName submit', function (name) {
     DASConnector.emit('new userName submit', name);
@@ -51,10 +57,11 @@ ioServer.on('connection', function (socket) {
         id: currentRoomID++,
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
-        winner: null
+        winner: null,
+        socket: socket.rooms
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
-      ioServer.sockets.emit("room initialized", gameRoom.id);
+      ioServer.sockets.emit("room initialized", JSON.stringify(gameRoom.players), gameRoom.id, gameRoom.socket);
       gameRoom = null;
     } else {
       socket.to(user.socket).emit("waiting for opponent");
@@ -63,16 +70,18 @@ ioServer.on('connection', function (socket) {
 
   socket.on("user click", function (room, userSocketID, col, row) {
     try {
-      if (userSocketID ===
-        gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
-        ioServer.sockets.emit("opponent's turn");
-        return;
-      } else if (!gameRoomsPool[room].grid.get(row, col)) {
+      //if (userSocketID ===
+      //  gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
+      //  ioServer.sockets.emit("opponent's turn");
+      //  return;
+      //} else
+      if (!gameRoomsPool[room].grid.get(row, col)) {
         gameRoomsPool[room].grid.set(row, col, userSocketID);
         gameRoomsPool[room].winner =
-          checkResult(gameRoomsPool[room].grid, col, row, userSocketID, room);
+          result.check(gameRoomsPool[room].grid, col, row, userSocketID, room);
 
-        ioServer.sockets.emit("grid update", col, row, userSocketID, room);
+        ioServer.sockets.emit("grid update", col, row, userSocketID, JSON.stringify(
+          gameRoomsPool[room].players));
 
         if (gameRoomsPool[room].winner) {
           ioServer.sockets.emit("winner", userSocketID);
@@ -87,70 +96,4 @@ ioServer.on('connection', function (socket) {
 app.listen(app.get('port'), function () {
   console.log('Business Layer Server started: localhost:8000');
 });
-
-function checkResult(matrix, col, row, userSocketID, room) {
-  let rowIndexArr = [], colIndexArr = [];
-  if ((matrix.getRow(row).filter(function (value) {
-      return value === userSocketID
-    }).length === 4) || (
-    matrix.getColumn(col).filter(function (value) {
-      return value === userSocketID
-    }).length === 4)) {
-    for (let i in matrix.getRow(row)) {
-      if (matrix.getRow(row)[i] === userSocketID) {
-        rowIndexArr.push(i)
-      }
-    }
-    for (let i in matrix.getColumn(col)) {
-      if (matrix.getColumn(col)[i] === userSocketID) {
-        colIndexArr.push(i)
-      }
-    }
-    if ((rowIndexArr[3] - rowIndexArr[0] === 3) ||
-      colIndexArr[3] - colIndexArr[0] === 3) {
-      return userSocketID;
-    }
-  }
-  if (checkDiagonal(gameRoomsPool[room].grid, col, row, userSocketID)) {
-    return userSocketID;
-  }
-  return null;
-}
-
-function checkDiagonal(matrix, col, row, userSocketID) {
-  let bCol = col > row ? col - row : 0,
-      bRow = col < row ? row - col : 0,
-      bArray = [], eArray = [];
-  try {
-    while (matrix.getColumn(++col), matrix.getRow(--row)) continue
-  } catch (outOfRange) {
-    try {
-      --col;
-      ++row; //TODO: refactor!
-      while (matrix.getColumn(col) && matrix.getRow(row)) {
-        eArray.push(matrix.get(row, col));
-        matrix.validateCoords(--col, ++row);
-      }
-    } catch (outOfRange) {
-      if (eArray.filter(function (value) {
-          return value === userSocketID
-        }).length === 4) {
-        return true;
-      }
-    }
-  }
-  try {
-    while (matrix.getColumn(bCol) && matrix.getRow(bRow)) {
-      bArray.push(matrix.get(bRow, bCol));
-      matrix.validateCoords(bRow++, bCol++);
-    }
-  } catch (outOfRange) {
-    if (bArray.filter(function (value) {
-        return value === userSocketID
-      }).length === 4) {
-      return true;
-    }
-  }
-  return false;
-}
 

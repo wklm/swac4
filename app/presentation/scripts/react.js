@@ -9,13 +9,13 @@ var Cell = React.createClass({
     }
   },
 
-  componentWillMount: function() {
-    socket.on('grid update', (col, row, playerID, roomID) =>
-      this.update(col, row, playerID, roomID)
+  componentWillMount: function () {
+    socket.on('grid update', (col, row, playerID, members) =>
+      this.update(col, row, playerID, members)
     );
   },
 
-  update: function(col, row, playerID, roomID) {
+  update: function (col, row, playerID, members) {
     if (col === this.props.y && row === this.props.x) {
       this.setState({
         occupied: true,
@@ -26,10 +26,10 @@ var Cell = React.createClass({
 
   clickHandler: function (row, col, user) {
     console.log("clicked column: " + col + ", row: " + row, " user: ", user);
-      socket.emit('user click', this.props.currentRoom, socket.id, col, row); // make move
+    socket.emit('user click', this.props.currentRoom, socket.id, col, row); // make move
   },
 
-  render: function () { // first char of userSocketID is displayed on player's click
+  render: function () {
     return this.state.occupied ? (
       <div
         className="cell"
@@ -162,12 +162,12 @@ var Root = React.createClass({
       this.nameAckHandler(JSON.parse(ack))
     );
 
-    socket.on('room initialized', (roomID) =>
-      this.connectToGameRoom(roomID)
+    socket.on('room initialized', (members, roomID, roomSocket) =>
+      this.connectToGameRoom(members, roomID, roomSocket)
     );
 
     socket.on('winner', (user) => { // on win
-      alert("the winner is: " +  user);
+      alert("the winner is: " + user);
     });
     socket.on('opponent\'s turn', () => {
       console.log("wait for your turn!");
@@ -184,10 +184,13 @@ var Root = React.createClass({
     socket.emit('user will join room', user)
   },
 
-  connectToGameRoom: function (roomID) {
-    this.setState({
-      currentGameRoom: roomID
-    });
+  connectToGameRoom: function (members, roomID, roomSocket) {
+    if (checkRoom(members)) {
+      socket.emit("subscribe", {room: roomSocket});
+      this.setState({
+        currentGameRoom: roomID
+      });
+    }
   },
 
   handleNewUserArrival: function (name) {
@@ -216,4 +219,10 @@ ReactDOM.render(
   document.getElementById('react')
 );
 
+
+function checkRoom(members) {
+  let m = JSON.parse(members);
+  return m[0].socket === socket.id
+    || m[1].socket === socket.id
+}
 
