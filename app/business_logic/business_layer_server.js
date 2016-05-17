@@ -34,12 +34,15 @@ ioServer.on('connection', function (socket) {
     DASConnector = ioClient.connect('http://localhost:9000');
     DASConnector.emit('new user arrived')
   }
+
   socket.on('new userName submit', function (name) {
     DASConnector.emit('new userName submit', name);
   });
+
   socket.on('newUserName ack', function (acknowledgedNewUser) {
     ioServer.sockets.emit('newUserName ack', acknowledgedNewUser);
   });
+
   socket.on('user will join room', function (user) {
     activeUserPool.push(user);
     if (user.id % 2) {
@@ -57,6 +60,7 @@ ioServer.on('connection', function (socket) {
       socket.to(user.socket).emit("waiting for opponent");
     }
   });
+
   socket.on("user click", function (room, userSocketID, col, row) {
     try {
       if (userSocketID ===
@@ -115,7 +119,6 @@ function checkResult(matrix, col, row, userSocketID, room) {
   ;
   return null;
 }
-
 
 function checkDiagonal(matrix, col, row, userSocketID) {
   let resultArray = [];
