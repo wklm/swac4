@@ -167,9 +167,9 @@ var Root = React.createClass({
     );
 
     socket.on('winner', (user) => { // on win
-      alert("winner", user);
+      alert("the winner is: " +  user);
     });
-    socket.on('opponent\'s turn', () => { // on win
+    socket.on('opponent\'s turn', () => {
       console.log("wait for your turn!");
     });
   },

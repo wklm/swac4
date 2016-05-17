@@ -84,11 +84,9 @@ ioServer.on('connection', function (socket) {
     }
   });
 });
-
 app.listen(app.get('port'), function () {
   console.log('Business Layer Server started: localhost:8000');
 });
-
 
 function checkResult(matrix, col, row, userSocketID, room) {
   let rowIndexArr = [], colIndexArr = [];
@@ -116,25 +114,38 @@ function checkResult(matrix, col, row, userSocketID, room) {
   if (checkDiagonal(gameRoomsPool[room].grid, col, row, userSocketID)) {
     return userSocketID;
   }
-  ;
   return null;
 }
 
 function checkDiagonal(matrix, col, row, userSocketID) {
-  let resultArray = [];
-  let bCol = 0, bRow = 0;
-  if (col > row) {
-    bCol = col - row;
-  } else if (col < row) {
-    bRow = row - col;
+  let bCol = col > row ? col - row : 0,
+      bRow = col < row ? row - col : 0,
+      bArray = [], eArray = [];
+  try {
+    while (matrix.getColumn(++col), matrix.getRow(--row)) continue
+  } catch (outOfRange) {
+    try {
+      --col;
+      ++row; //TODO: refactor!
+      while (matrix.getColumn(col) && matrix.getRow(row)) {
+        eArray.push(matrix.get(row, col));
+        matrix.validateCoords(--col, ++row);
+      }
+    } catch (outOfRange) {
+      if (eArray.filter(function (value) {
+          return value === userSocketID
+        }).length === 4) {
+        return true;
+      }
+    }
   }
   try {
     while (matrix.getColumn(bCol) && matrix.getRow(bRow)) {
-      resultArray.push(matrix.get(bRow, bCol));
+      bArray.push(matrix.get(bRow, bCol));
       matrix.validateCoords(bRow++, bCol++);
     }
   } catch (outOfRange) {
-    if (resultArray.filter(function (value) {
+    if (bArray.filter(function (value) {
         return value === userSocketID
       }).length === 4) {
       return true;
@@ -142,3 +153,4 @@ function checkDiagonal(matrix, col, row, userSocketID) {
   }
   return false;
 }
+
