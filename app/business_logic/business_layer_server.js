@@ -33,16 +33,11 @@ var currentRoomID = 0;
 ioServer.on('connection', function (socket) {
   DASConnector.emit('new user arrived');
 
-  socket.on('subscribe', function (data) {
-    socket.join(data.room);
-  })
 
-  socket.on('unsubscribe', function (data) {
-    socket.leave(data.room);
-  })
 
   socket.on('new userName submit', function (name) {
     DASConnector.emit('new userName submit', name);
+    socket.join("global");
   });
 
   socket.on('newUserName ack', function (acknowledgedNewUser) {
@@ -57,11 +52,11 @@ ioServer.on('connection', function (socket) {
         id: currentRoomID++,
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
-        winner: null,
-        socket: socket.rooms
+        winner: null
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
-      ioServer.sockets.emit("room initialized", JSON.stringify(gameRoom.players), gameRoom.id, gameRoom.socket);
+      ioServer.sockets.in('global').emit('room initialized', gameRoom.id);
+      socket.join(gameRoom.id);
       gameRoom = null;
     } else {
       socket.to(user.socket).emit("waiting for opponent");
@@ -70,11 +65,11 @@ ioServer.on('connection', function (socket) {
 
   socket.on("user click", function (room, userSocketID, col, row) {
     try {
-      //if (userSocketID ===
-      //  gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
-      //  ioServer.sockets.emit("opponent's turn");
-      //  return;
-      //} else
+      if (userSocketID ===
+        gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
+        ioServer.sockets.emit("opponent's turn");
+        return;
+      } else
       if (!gameRoomsPool[room].grid.get(row, col)) {
         gameRoomsPool[room].grid.set(row, col, userSocketID);
         gameRoomsPool[room].winner =

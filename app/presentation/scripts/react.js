@@ -172,6 +172,9 @@ var Root = React.createClass({
     socket.on('opponent\'s turn', () => {
       console.log("wait for your turn!");
     });
+    socket.on("room initialized", (roomID) =>  {
+      this.connectToGameRoom(roomID)
+    });
   },
 
   nameAckHandler: function (ack) {
@@ -181,16 +184,19 @@ var Root = React.createClass({
     });
     ack.socket = socket.id;
     let user = ack;
-    socket.emit('user will join room', user)
+    socket.emit('user will join room', user);
   },
 
-  connectToGameRoom: function (members, roomID, roomSocket) {
-    if (checkRoom(members)) {
-      socket.emit("subscribe", {room: roomSocket});
+  connectToGameRoom: function (roomID) {
+      console.log(roomID);
       this.setState({
         currentGameRoom: roomID
       });
-    }
+    console.log(roomID);
+
+    socket.emit("subscribe", {
+      room: data
+    });
   },
 
   handleNewUserArrival: function (name) {
