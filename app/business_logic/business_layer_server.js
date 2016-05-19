@@ -37,7 +37,6 @@ ioServer.on('connection', function (socket) {
 
   socket.on('newUserName ack', function (acknowledgedNewUser) {
     let user = JSON.parse(acknowledgedNewUser);
-    console.log(user)
     ioServer.sockets.connected['/#' + user.socket].emit('newUserName ack', acknowledgedNewUser);
   });
 
@@ -45,16 +44,16 @@ ioServer.on('connection', function (socket) {
     ioServer.sockets.connected['/#' + socket].emit('newUserName negative ack', name);
   });
 
-  socket.on('user will join room', function (user, variant) { // variant may be 'standard' or 'popout'
+  socket.on('user will join room', function (user) { // variant may be 'standard' or 'popout'
     activeUserPool.push(user);
     if (user.id % 2) {
-      let gameRoom = { //
+      let gameRoom = {
         players: activeUserPool.slice(-2),
         id: currentRoomID++,
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
         winner: null,
-        gameVariant: variant
+        gameVariant: null
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id);
@@ -66,39 +65,35 @@ ioServer.on('connection', function (socket) {
   });
 
   socket.on("user click", function (room, userSocketID, col, row) {
+    const r = gameRoomsPool[room],
+      playersStr = JSON.stringify(r.players), rSockets = ioServer.sockets.connected,
+      pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket];
     try {
-      if (userSocketID ===
-        gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
-        ioServer.sockets.connected['/#' + userSocketID].emit("opponent's turn");
-        return;
-      } else if (!gameRoomsPool[room].grid.get(row, col)) {
-        gameRoomsPool[room].grid.set(row, col, userSocketID);
-        gameRoomsPool[room].winner =
-          result.check(gameRoomsPool[room].grid, col, row, userSocketID, room);
+      if (!gameRoomsPool[room].gameVariant) {throw "no game variant selected";}
+      if (userSocketID === r.players[r.currentPlayerMove].socket) {throw("opponent's turn");}
+      if (r.grid.get(row, col)) {throw "cell already occupied";}
 
-        ioServer.sockets.connected['/#' + gameRoomsPool[room].players[0].socket].emit(
-          "grid update", col, row, userSocketID, JSON.stringify(
-            gameRoomsPool[room].players));
+      r.grid.set(row, col, userSocketID);
+      r.winner = result.check(r.grid, col, row, userSocketID, room);
 
-        ioServer.sockets.connected['/#' + gameRoomsPool[room].players[1].socket].emit(
-          "grid update", col, row, userSocketID, JSON.stringify(
-            gameRoomsPool[room].players));
+      rSockets['/#' + r.players[0].socket].emit("grid update", col, row, userSocketID, playersStr);
+      rSockets['/#' + r.players[1].socket].emit("grid update", col, row, userSocketID, playersStr);
 
-        if (gameRoomsPool[room].winner) {
-          ioServer.sockets.connected['/#' + gameRoomsPool[room].players[0].socket].emit("winner", userSocketID);
-          ioServer.sockets.connected['/#' + gameRoomsPool[room].players[1].socket].emit("winner", userSocketID);
-        }
+      if (r.winner) {
+        rSockets[pSocIDs[0]].emit("winner", userSocketID);
+        rSockets[pSocIDs[1]].emit("winner", userSocketID);
       }
-      gameRoomsPool[room].currentPlayerMove = +!gameRoomsPool[room].currentPlayerMove;
-    } catch (e) {
-      console.error(e);
+      r.currentPlayerMove = +!r.currentPlayerMove;
+    } catch (boardClickErr) {
+      console.error(boardClickErr);
+      rSockets['/#' + userSocketID].emit("board click error", boardClickErr);
     }
   });
   socket.on('leave room', function (room, userSocketID) { // leave the room
-    let opponent = userSocketID === gameRoomsPool[room].players[0].socket ?
-      gameRoomsPool[room].players[1].socket : userSocketID;
-    ioServer.sockets.connected['/#' + opponent].emit("opponent left");
-    ioServer.sockets.connected['/#' + userSocketID].disconnect();
+    const r = gameRoomsPool[room], rSockets = ioServer.sockets.connected;
+    let opponent = userSocketID === r.players[0].socket ? r.players[1].socket : userSocketID;
+    rSockets['/#' + opponent].emit("opponent left");
+    rSockets['/#' + userSocketID].disconnect();
   });
 });
 app.listen(app.get('port'), function () {

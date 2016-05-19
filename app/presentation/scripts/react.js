@@ -94,6 +94,10 @@ var Grid = React.createClass({
     }
   },
 
+  leaveRoom: function() {
+    socket.emit('leave room', this.props.currentRoom, socket.id);
+  },
+
   render: function () {
     let rows = this.state.matrix.map(row => {
       return (
@@ -106,9 +110,14 @@ var Grid = React.createClass({
       )
     })
     return (
+      <div>
       <table className="grid row">
         {rows}
       </table>
+        <button onClick={this.leaveRoom}>
+          leave room
+        </button>
+      </div>
     )
   }
 });
@@ -178,6 +187,9 @@ var Root = React.createClass({
     });
     socket.on("room initialized", (roomID) =>  {
       this.connectToGameRoom(roomID)
+    });
+    socket.on("opponent left", (roomID) =>  {
+      console.log("opp left :(")
     });
   },
 
