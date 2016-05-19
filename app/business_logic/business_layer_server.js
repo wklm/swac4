@@ -31,17 +31,17 @@ var gameRoomsPool = [];
 var currentRoomID = 0;
 
 ioServer.on('connection', function (socket) {
-  DASConnector.emit('new user arrived');
-
-
-
-  socket.on('new userName submit', function (name) {
-    DASConnector.emit('new userName submit', name);
-    socket.join("global");
+  socket.on('new userName submit', function (user) {
+    DASConnector.emit('new userName submit', user);
   });
 
   socket.on('newUserName ack', function (acknowledgedNewUser) {
-    ioServer.sockets.emit('newUserName ack', acknowledgedNewUser);
+    let user = JSON.parse(acknowledgedNewUser);
+    ioServer.sockets.connected['/#' + user.socket].emit('newUserName ack', acknowledgedNewUser);
+  });
+
+  socket.on('newUserName negative ack', function (name, socket) { // name already taken
+    ioServer.sockets.connected['/#' + socket].emit('newUserName negative ack', name);
   });
 
   socket.on('user will join room', function (user) {
@@ -55,11 +55,11 @@ ioServer.on('connection', function (socket) {
         winner: null
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
-      ioServer.sockets.in('global').emit('room initialized', gameRoom.id);
-      socket.join(gameRoom.id);
+      ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id);
+      ioServer.sockets.connected['/#' + gameRoom.players[1].socket].emit('room initialized', gameRoom.id);
       gameRoom = null;
     } else {
-      socket.to(user.socket).emit("waiting for opponent");
+      ioServer.sockets.connected['/#' + user.socket].emit("waiting for opponent");
     }
   });
 
@@ -67,7 +67,7 @@ ioServer.on('connection', function (socket) {
     try {
       if (userSocketID ===
         gameRoomsPool[room].players[gameRoomsPool[room].currentPlayerMove].socket) {
-        ioServer.sockets.emit("opponent's turn");
+        ioServer.sockets.connected['/#' + userSocketID].emit("opponent's turn");
         return;
       } else
       if (!gameRoomsPool[room].grid.get(row, col)) {
@@ -75,11 +75,19 @@ ioServer.on('connection', function (socket) {
         gameRoomsPool[room].winner =
           result.check(gameRoomsPool[room].grid, col, row, userSocketID, room);
 
-        ioServer.sockets.emit("grid update", col, row, userSocketID, JSON.stringify(
+
+        ioServer.sockets.connected['/#' + gameRoomsPool[room].players[0].socket].emit(
+          "grid update", col, row, userSocketID, JSON.stringify(
           gameRoomsPool[room].players));
 
+        ioServer.sockets.connected['/#' + gameRoomsPool[room].players[1].socket].emit(
+          "grid update", col, row, userSocketID, JSON.stringify(
+            gameRoomsPool[room].players));
+
+
         if (gameRoomsPool[room].winner) {
-          ioServer.sockets.emit("winner", userSocketID);
+          ioServer.sockets.connected['/#' + gameRoomsPool[room].players[0].socket].emit("winner", userSocketID);
+          ioServer.sockets.connected['/#' + gameRoomsPool[room].players[1].socket].emit("winner", userSocketID);
         }
       }
       gameRoomsPool[room].currentPlayerMove = +!gameRoomsPool[room].currentPlayerMove;

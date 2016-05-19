@@ -162,6 +162,10 @@ var Root = React.createClass({
       this.nameAckHandler(JSON.parse(ack))
     );
 
+    socket.on('newUserName negative ack', (name) => // userName not  accepted
+      this.nameNotAvailable(name)
+    );
+
     socket.on('room initialized', (members, roomID, roomSocket) =>
       this.connectToGameRoom(members, roomID, roomSocket)
     );
@@ -187,23 +191,32 @@ var Root = React.createClass({
     socket.emit('user will join room', user);
   },
 
+  nameNotAvailable: function(name) {
+    alert("sorry, " + name + " is already taken, please choose outher one");
+    this.setState({
+      userName: null
+    })
+  },
+
   connectToGameRoom: function (roomID) {
-      console.log(roomID);
       this.setState({
         currentGameRoom: roomID
       });
     console.log(roomID);
 
     socket.emit("subscribe", {
-      room: data
+      room: roomID
     });
   },
 
-  handleNewUserArrival: function (name) {
+  handleNewUserArrival: function (user) {
+    console.log(socket.id);
+
     this.setState({
-      userName: name
+      userName: user
     })
-    socket.emit('new userName submit', name);
+    user.socket = socket.id;
+    socket.emit('new userName submit', user);
   },
 
   render: function () {
