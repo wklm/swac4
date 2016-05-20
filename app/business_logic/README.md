@@ -1,7 +1,12 @@
+<center>
+
 #Socket messages:
 
 <br/>
 ##outgoing:
+
+
+<center>
 
 | message        | arguments           | description   
 | ------------- |:------------------------:| --:| 
@@ -14,9 +19,11 @@
 |winner| userSocketID | triggered when player wins to notify game members
 |board click error |1. opponent's turn <br /> 2. can't popout element, <br />3. wrong game variant |  1. triggered on click in opponent's turn, <br /> 2. can't popout element, <br /> 3. game variant should be 'standard' or 'popout', triggered on invalid variant's name or when variant is not defined
 
+</center>
 <br/>
 
 ## incoming:
+<center>
 
 | message        | arguments           | description   
 | ------------- |:-------------:| -----:| 
@@ -25,3 +32,4 @@
 | user click     | room, userSocketID, col, row      |  user clicks a field on game board |
 | leave room | room, userSocketID      |  user leaves room |
 
+</center>
