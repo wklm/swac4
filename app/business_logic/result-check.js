@@ -31,7 +31,7 @@ BL.check = function (matrix, col, row, userSocketID) {
     return userSocketID;
   }
   return null;
-}
+};
 
 function checkDiagonal(matrix, col, row, userSocketID) {
   let bCol = col > row ? col - row : 0,
@@ -41,9 +41,7 @@ function checkDiagonal(matrix, col, row, userSocketID) {
     while (matrix.getColumn(++col), matrix.getRow(--row)) continue
   } catch (outOfRange) {
     try {
-      if (--col < matrix.getHeight() - 1) {
-        ++row
-      }
+      if (--col < matrix.getHeight() - 1) {++row}
       while (matrix.getColumn(col) && matrix.getRow(row)) {
         eArray.push(matrix.get(row, col));
         matrix.validateCoords(--col, ++row);

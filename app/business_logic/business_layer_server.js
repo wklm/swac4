@@ -53,7 +53,7 @@ ioServer.on('connection', function (socket) {
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
         winner: null,
-        gameVariant: null
+        gameVariant: 'popout'
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id);
@@ -65,19 +65,32 @@ ioServer.on('connection', function (socket) {
   });
 
   socket.on("user click", function (room, userSocketID, col, row) {
-    const r = gameRoomsPool[room],
-      playersStr = JSON.stringify(r.players), rSockets = ioServer.sockets.connected,
-      pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket];
+    const r = gameRoomsPool[room], rSockets = ioServer.sockets.connected,
+      pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket],
+      cell = r.grid.get(row, col);
+    let h = r.grid.getHeight() - 1;
     try {
-      if (!gameRoomsPool[room].gameVariant) {throw "no game variant selected";}
-      if (userSocketID === r.players[r.currentPlayerMove].socket) {throw("opponent's turn");}
-      if (r.grid.get(row, col)) {throw "cell already occupied";}
-
-      r.grid.set(row, col, userSocketID);
+      if (userSocketID === r.players[r.currentPlayerMove].socket) {
+        throw("opponent's turn");
+      }
+      if (!cell) {
+        r.grid.set(row, col, userSocketID); // update signle cell
+        rSockets['/#' + r.players[0].socket].emit("grid update cell", col, row, userSocketID);
+        rSockets['/#' + r.players[1].socket].emit("grid update cell", col, row, userSocketID);
+      } else switch (r.gameVariant) {
+        case 'standard':
+          throw "cell already occupied";
+        case 'popout':
+          if (cell === userSocketID && row === h - 1) {
+            r.grid.popOut(); // update whole gird
+            rSockets['/#' + r.players[0].socket].emit("grid update all", r.grid);
+            rSockets['/#' + r.players[1].socket].emit("grid update all", r. grid);
+            break;
+          } else throw "can't popout element";
+        default:
+          throw "wrong game variant";
+      }
       r.winner = result.check(r.grid, col, row, userSocketID, room);
-
-      rSockets['/#' + r.players[0].socket].emit("grid update", col, row, userSocketID, playersStr);
-      rSockets['/#' + r.players[1].socket].emit("grid update", col, row, userSocketID, playersStr);
 
       if (r.winner) {
         rSockets[pSocIDs[0]].emit("winner", userSocketID);
@@ -89,6 +102,7 @@ ioServer.on('connection', function (socket) {
       rSockets['/#' + userSocketID].emit("board click error", boardClickErr);
     }
   });
+
   socket.on('leave room', function (room, userSocketID) { // leave the room
     const r = gameRoomsPool[room], rSockets = ioServer.sockets.connected;
     let opponent = userSocketID === r.players[0].socket ? r.players[1].socket : userSocketID;

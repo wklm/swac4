@@ -10,12 +10,12 @@ var Cell = React.createClass({
   },
 
   componentWillMount: function () {
-    socket.on('grid update', (col, row, playerID, members) =>
-      this.update(col, row, playerID, members)
+    socket.on('grid update cell', (col, row, playerID) =>
+      this.update(col, row, playerID)
     );
   },
 
-  update: function (col, row, playerID, members) {
+  update: function (col, row, playerID) {
     if (col === this.props.y && row === this.props.x) {
       this.setState({
         occupied: true,
@@ -93,8 +93,7 @@ var Grid = React.createClass({
       }
     }
   },
-
-  leaveRoom: function() {
+  leaveRoom: function () {
     socket.emit('leave room', this.props.currentRoom, socket.id);
   },
 
@@ -111,9 +110,9 @@ var Grid = React.createClass({
     })
     return (
       <div>
-      <table className="grid row">
-        {rows}
-      </table>
+        <table className="grid row">
+          {rows}
+        </table>
         <button onClick={this.leaveRoom}>
           leave room
         </button>
@@ -185,10 +184,10 @@ var Root = React.createClass({
     socket.on('opponent\'s turn', () => {
       console.log("wait for your turn!");
     });
-    socket.on("room initialized", (roomID) =>  {
+    socket.on("room initialized", (roomID) => {
       this.connectToGameRoom(roomID)
     });
-    socket.on("opponent left", (roomID) =>  {
+    socket.on("opponent left", (roomID) => {
       console.log("opp left :(")
     });
   },
@@ -203,7 +202,7 @@ var Root = React.createClass({
     socket.emit('user will join room', user);
   },
 
-  nameNotAvailable: function(name) {
+  nameNotAvailable: function (name) {
     alert("sorry, " + name + " is already taken, please choose outher one");
     this.setState({
       userName: null
@@ -211,9 +210,9 @@ var Root = React.createClass({
   },
 
   connectToGameRoom: function (roomID) {
-      this.setState({
-        currentGameRoom: roomID
-      });
+    this.setState({
+      currentGameRoom: roomID
+    });
     console.log(roomID);
 
     socket.emit("subscribe", {
