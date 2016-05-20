@@ -1,5 +1,3 @@
-<center>
-
 #Socket messages:
 
 <br/>
