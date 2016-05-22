@@ -36,10 +36,8 @@ var ConnectFour;
                 for (var row = 5; row >= 0; row--) {
                     if (!col[row]) {
                         col[row] = 1;
-                        for (var i = 0; i < 7; i++) {
-                            $scope.showArrowDown[i] = false;
-                        }
                         socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, row);
+                        $scope.thisPlayersTurn(false);
                         break;
                     }
                 }
@@ -51,21 +49,17 @@ var ConnectFour;
                     oppCol[row] = 2;
                     console.log("THIS opponentDrop: " + row);
                 }
+                $scope.thisPlayersTurn(true);
+                $scope.safeApply();
             };
             $scope.popout = function (column) {
             };
             $scope.thisPlayersTurn = function (trueFalse) {
-                if (trueFalse === true) {
-                    for (var i = 0; i < 7; i++) {
-                        $scope.showArrowDown[i] = true;
-                        $scope.header[i] = 1;
-                    }
+                for (var i = 0; i < 7; i++) {
+                    $scope.showArrowDown[i] = trueFalse;
+                    $scope.header[i] = 1;
                 }
-                else {
-                    for (var i = 0; i < 7; i++) {
-                        $scope.showArrowDown[i] = false;
-                    }
-                }
+                console.log("$scope.showArrowDown" + JSON.stringify($scope.showArrowDown));
             };
             $scope.surrender = function () {
                 console.log("function surrender");
@@ -77,30 +71,30 @@ var ConnectFour;
                     $scope.user = { id: null, name: $scope.name, socket: socket.id };
                     console.log("User: " + $scope.user);
                     socket.emit('new userName submit', $scope.user);
-                    socket.on('newUserName ack', function (ack) {
-                        var userAck = JSON.parse(ack);
-                        $scope.user.id = userAck.id;
-                        console.log("User ID ACK: " + userAck.id);
-                        console.log("User ID: " + $scope.user.id);
-                        console.log("User: " + JSON.stringify($scope.user));
-                        socket.emit('user will join room', $scope.user);
-                        if (($scope.user.id % 2) === 0) {
-                            console.log("Player1");
-                            $scope.imageSources[1] = $scope.icons.red;
-                            $scope.imageSources[2] = $scope.icons.blue;
-                            $scope.imgHeaderSources[1] = $scope.icons.redArrowDown;
-                            $scope.imgHeaderSources[2] = $scope.icons.blueArrowDown;
-                        }
-                        else if (($scope.user.id % 2) === 1) {
-                            console.log("Player2");
-                            $scope.imageSources[1] = $scope.icons.blue;
-                            $scope.imageSources[2] = $scope.icons.red;
-                            $scope.imgHeaderSources[1] = $scope.icons.blueArrowDown;
-                            $scope.imgHeaderSources[2] = $scope.icons.redArrowDown;
-                        }
-                    });
                 }
             };
+            socket.on('newUserName ack', function (ack) {
+                var userAck = JSON.parse(ack);
+                $scope.user.id = userAck.id;
+                console.log("User ID ACK: " + userAck.id);
+                console.log("User ID: " + $scope.user.id);
+                console.log("User: " + JSON.stringify($scope.user));
+                socket.emit('user will join room', $scope.user);
+                if (($scope.user.id % 2) === 0) {
+                    console.log("Player1");
+                    $scope.imageSources[1] = $scope.icons.red;
+                    $scope.imageSources[2] = $scope.icons.blue;
+                    $scope.imgHeaderSources[1] = $scope.icons.redArrowDown;
+                    $scope.imgHeaderSources[2] = $scope.icons.blueArrowDown;
+                }
+                else if (($scope.user.id % 2) === 1) {
+                    console.log("Player2");
+                    $scope.imageSources[1] = $scope.icons.blue;
+                    $scope.imageSources[2] = $scope.icons.red;
+                    $scope.imgHeaderSources[1] = $scope.icons.blueArrowDown;
+                    $scope.imgHeaderSources[2] = $scope.icons.redArrowDown;
+                }
+            });
             socket.on('newUserName negative ack', function (name, socket) {
                 $scope.nameError = true;
             });
@@ -110,19 +104,14 @@ var ConnectFour;
             socket.on('room initialized', function (roomID) {
                 console.log("ROOM INITIALIZED");
                 $scope.gameRoomID = roomID;
-                if ($scope.user.id % 2 === 0) {
-                    $scope.thisPlayersTurn(true);
-                }
-                else {
-                    $scope.thisPlayersTurn(false);
-                }
-                $scope.$apply(function () {
-                    $scope.play = true;
-                    $scope.start = false;
-                });
+                console.log("$scope.user.id % 2 === 0:" + ($scope.user.id % 2 === 0));
+                $scope.thisPlayersTurn($scope.user.id % 2 === 0);
+                $scope.play = true;
+                $scope.start = false;
+                $scope.safeApply();
             });
             socket.on('winner', function (userSocketID) {
-                if (userSocketID === $scope.user.socket) {
+                if (userSocketID === $scope.user.id) {
                     console.log("YOU WON!");
                 }
                 else {
@@ -133,16 +122,22 @@ var ConnectFour;
                 console.log("OPPONENT LEFT!");
             });
             socket.on('grid update cell', function (col, row, userSocketID) {
-                if (userSocketID === $scope.user.socket) {
-                    console.log("userSocketID: " + userSocketID);
-                    console.log("$scope.user.socket: " + $scope.user.socket);
+                console.log("userSocketID: " + userSocketID);
+                console.log("$scope.user.socket: " + $scope.user.socket);
+                if (userSocketID === $scope.user.id) {
                 }
                 else {
                     $scope.opponentDrop(col, row);
                     console.log("grid update cell: " + row);
-                    $scope.thisPlayersTurn(true);
                 }
             });
+            $scope.safeApply = function () {
+                var phase = $scope.$root.$$phase;
+                if (phase == '$apply' || phase == '$digest')
+                    $scope.$eval();
+                else
+                    $scope.$apply();
+            };
         }
         Controller.$inject = ["$scope"];
         return Controller;

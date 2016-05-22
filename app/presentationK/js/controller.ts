@@ -31,6 +31,7 @@ module ConnectFour {
     gameRoomID : number;
     thisPlayersTurn : (trueFalse : boolean) => void;
     user : {id : number, name : string, socket : string};
+    safeApply : () => void;
   }
 
   export class Controller {
@@ -91,10 +92,8 @@ module ConnectFour {
           // find first free space
           if(!col[row]){
             col[row] = 1;
-            for(let i = 0; i < 7; i++){
-              $scope.showArrowDown[i] = false;
-            }
             socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, row);
+            $scope.thisPlayersTurn(false);
             break;
           }
         }
@@ -109,6 +108,8 @@ module ConnectFour {
           oppCol[row] = 2;
           console.log("THIS opponentDrop: " + row);
         }
+        $scope.thisPlayersTurn(true);
+        $scope.safeApply();
       }
 
 
@@ -117,16 +118,11 @@ module ConnectFour {
       }
 
       $scope.thisPlayersTurn = (trueFalse : boolean) => {
-        if(trueFalse === true){
-          for(let i = 0; i < 7; i++){
-            $scope.showArrowDown[i] = true;
-            $scope.header[i] = 1;
-          }
-        } else {
-          for(let i = 0; i < 7; i++){
-            $scope.showArrowDown[i] = false;
-          }
+        for(let i = 0; i < 7; i++){
+          $scope.showArrowDown[i] = trueFalse;
+          $scope.header[i] = 1;
         }
+        console.log("$scope.showArrowDown" + JSON.stringify($scope.showArrowDown));
 
       }
 
@@ -143,85 +139,90 @@ module ConnectFour {
           console.log("User: " + $scope.user);
 
           socket.emit('new userName submit', $scope.user);
-
-          socket.on('newUserName ack', function (ack) {
-            var userAck = JSON.parse(ack);
-            $scope.user.id = userAck.id;
-            console.log("User ID ACK: " + userAck.id);
-            console.log("User ID: " + $scope.user.id);
-            console.log("User: " + JSON.stringify($scope.user));
-
-            socket.emit('user will join room', $scope.user);
-
-            if(($scope.user.id % 2) === 0){ // Player 1 Rot
-              console.log("Player1")
-              $scope.imageSources[1] = $scope.icons.red;
-              $scope.imageSources[2] = $scope.icons.blue;
-
-              $scope.imgHeaderSources[1] = $scope.icons.redArrowDown;
-              $scope.imgHeaderSources[2] = $scope.icons.blueArrowDown;
-
-            } else if(($scope.user.id % 2) === 1){ // Player 2 Blau
-              console.log("Player2")
-              $scope.imageSources[1] = $scope.icons.blue;
-              $scope.imageSources[2] = $scope.icons.red;
-
-              $scope.imgHeaderSources[1] = $scope.icons.blueArrowDown;
-              $scope.imgHeaderSources[2] = $scope.icons.redArrowDown;
-            }
-          });
         }
       }
 
-      socket.on('newUserName negative ack', function(name, socket){
+      socket.on('newUserName ack', (ack) => {
+        var userAck = JSON.parse(ack);
+        $scope.user.id = userAck.id;
+        console.log("User ID ACK: " + userAck.id);
+        console.log("User ID: " + $scope.user.id);
+        console.log("User: " + JSON.stringify($scope.user));
+
+        socket.emit('user will join room', $scope.user);
+
+        if(($scope.user.id % 2) === 0){ // Player 1 Rot
+          console.log("Player1")
+          $scope.imageSources[1] = $scope.icons.red;
+          $scope.imageSources[2] = $scope.icons.blue;
+
+          $scope.imgHeaderSources[1] = $scope.icons.redArrowDown;
+          $scope.imgHeaderSources[2] = $scope.icons.blueArrowDown;
+
+        } else if(($scope.user.id % 2) === 1){ // Player 2 Blau
+          console.log("Player2")
+          $scope.imageSources[1] = $scope.icons.blue;
+          $scope.imageSources[2] = $scope.icons.red;
+
+          $scope.imgHeaderSources[1] = $scope.icons.blueArrowDown;
+          $scope.imgHeaderSources[2] = $scope.icons.redArrowDown;
+        }
+      });
+
+      socket.on('newUserName negative ack', (name, socket) => {
         $scope.nameError = true;
       });
 
-      socket.on('waiting for opponent', function(){
+      socket.on('waiting for opponent', () => {
         console.log("Waiting for opponent");
       });
 
-      socket.on('room initialized', function(roomID){
+      socket.on('room initialized', (roomID) => {
         console.log("ROOM INITIALIZED");
         $scope.gameRoomID = roomID;
-        if($scope.user.id % 2 === 0){
-          $scope.thisPlayersTurn(true);
-        } else {
-          $scope.thisPlayersTurn(false);
-        }
-        $scope.$apply(function(){
-            $scope.play = true;
-            $scope.start = false;
-        });
+        console.log("$scope.user.id % 2 === 0:" + ($scope.user.id % 2 === 0));
+        $scope.thisPlayersTurn($scope.user.id % 2 === 0);
+        $scope.play = true;
+        $scope.start = false;
+        $scope.safeApply();
       });
 
-      socket.on('winner', function(userSocketID){
-        if(userSocketID === $scope.user.socket){
+      socket.on('winner', (userSocketID) => {
+        if(userSocketID === $scope.user.id){
           console.log("YOU WON!");
         } else {
           console.log("OTHER USER WON!");
         }
       });
 
-      socket.on('opponent left', function(){
+      socket.on('opponent left', () => {
         console.log("OPPONENT LEFT!");
       });
 
 
-      socket.on('grid update cell', function(col, row, userSocketID){
-        if(userSocketID === $scope.user.socket){
-          console.log("userSocketID: " + userSocketID);
-          console.log("$scope.user.socket: " + $scope.user.socket);
+      socket.on('grid update cell', (col, row, userSocketID) => {
+        console.log("userSocketID: " + userSocketID);
+        console.log("$scope.user.socket: " + $scope.user.socket);
+        if(userSocketID === $scope.user.id){
+
           // do nothing
         } else {
           $scope.opponentDrop(col, row);
           console.log("grid update cell: " + row);
-          // now it's time for this players move
-          $scope.thisPlayersTurn(true);
         }
       });
 
+      $scope.safeApply = () => {
+        var phase = $scope.$root.$$phase;
+        if (phase == '$apply' || phase == '$digest')
+            $scope.$eval();
+        else
+            $scope.$apply();
+      }
+
+
     }
+
 
   }
 
