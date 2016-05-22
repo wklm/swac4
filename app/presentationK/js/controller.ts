@@ -32,6 +32,8 @@ module ConnectFour {
     thisPlayersTurn : (trueFalse : boolean) => void;
     user : {id : number, name : string, socket : string};
     safeApply : () => void;
+    success : boolean;
+    failure : boolean;
   }
 
   export class Controller {
@@ -81,6 +83,8 @@ module ConnectFour {
 
       $scope.start = true;
       $scope.play = false;
+      $scope.success = false;
+      $scope.failure = false;
 
 
       $scope.drop = (column : number) => {
@@ -133,10 +137,10 @@ module ConnectFour {
 
 
       $scope.startPlaying = () => {
-        if($scope.name != null){
+        if(($scope.name != null) && ($scope.name != undefined)){
           console.log("socket.id: " + socket.id);
           $scope.user = {id : null, name : $scope.name, socket : socket.id};
-          console.log("User: " + $scope.user);
+          console.log("User: " + JSON.stringify($scope.user));
 
           socket.emit('new userName submit', $scope.user);
         }
@@ -171,6 +175,7 @@ module ConnectFour {
 
       socket.on('newUserName negative ack', (name, socket) => {
         $scope.nameError = true;
+        $scope.safeApply();
       });
 
       socket.on('waiting for opponent', () => {
@@ -190,9 +195,14 @@ module ConnectFour {
       socket.on('winner', (userSocketID) => {
         if(userSocketID === $scope.user.id){
           console.log("YOU WON!");
+          $scope.success = true;
+          $scope.thisPlayersTurn(false);
         } else {
           console.log("OTHER USER WON!");
+          $scope.failure = true;
+          $scope.thisPlayersTurn(false);
         }
+        $scope.safeApply();
       });
 
       socket.on('opponent left', () => {

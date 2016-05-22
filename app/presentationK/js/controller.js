@@ -30,6 +30,8 @@ var ConnectFour;
             }
             $scope.start = true;
             $scope.play = false;
+            $scope.success = false;
+            $scope.failure = false;
             $scope.drop = function (column) {
                 console.log("Drop(" + column + ")");
                 var col = $scope.fields[column];
@@ -66,10 +68,10 @@ var ConnectFour;
                 socket.emit('leave room', $scope.gameRoomID, $scope.user.socket);
             };
             $scope.startPlaying = function () {
-                if ($scope.name != null) {
+                if (($scope.name != null) && ($scope.name != undefined)) {
                     console.log("socket.id: " + socket.id);
                     $scope.user = { id: null, name: $scope.name, socket: socket.id };
-                    console.log("User: " + $scope.user);
+                    console.log("User: " + JSON.stringify($scope.user));
                     socket.emit('new userName submit', $scope.user);
                 }
             };
@@ -97,6 +99,7 @@ var ConnectFour;
             });
             socket.on('newUserName negative ack', function (name, socket) {
                 $scope.nameError = true;
+                $scope.safeApply();
             });
             socket.on('waiting for opponent', function () {
                 console.log("Waiting for opponent");
@@ -113,10 +116,15 @@ var ConnectFour;
             socket.on('winner', function (userSocketID) {
                 if (userSocketID === $scope.user.id) {
                     console.log("YOU WON!");
+                    $scope.success = true;
+                    $scope.thisPlayersTurn(false);
                 }
                 else {
                     console.log("OTHER USER WON!");
+                    $scope.failure = true;
+                    $scope.thisPlayersTurn(false);
                 }
+                $scope.safeApply();
             });
             socket.on('opponent left', function () {
                 console.log("OPPONENT LEFT!");

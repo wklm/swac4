@@ -33,6 +33,14 @@ kathi.kutschera@gmx.at
 
   <div class="container-fluid" ng-show="start">
     <div class="row">
+      <div class="alert alert-danger" role="alert" ng-show="errorName">
+        The name {{$scope.name}} is already taken. Please choose another one!
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" ng-show="start">
+    <div class="row">
       <div class="col-xs-3">
         <form>
           <input type="text" ng-model="name" class="form-control" placeholder="Name" required>
@@ -42,6 +50,7 @@ kathi.kutschera@gmx.at
         </div>
       </div>
     </div>
+
     <div class="container-fluid" ng-show="play">
       <div class="row">
         <div class="col-xs-6">
@@ -66,9 +75,26 @@ kathi.kutschera@gmx.at
       </div>
       <div class = "row">
         <div class="col-xs-6">
-          <button type="button" class="btn btn-default btn-lg" ng-Click="surrender()"> Surrender </button>
+          <button type="button" class="btn btn-default btn-lg" ng-Click="surrender()" ng-hide="success || failure"> Surrender </button>
         </div>
       </div>
     </div>
+
+    <div class="container-fluid" ng-show="success">
+      <div class="row">
+        <div class="col-xs-6 alert alert-success" role="alert">
+          <b> Well done! </b> You won this game!
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid" ng-show="failure">
+      <div class="row">
+        <div class="col-xs-6 alert alert-danger" role="alert">
+          <b> Oh snap! </b> Your opponent won this game!
+        </div>
+      </div>
+    </div>
+
   </body>
   </html>
