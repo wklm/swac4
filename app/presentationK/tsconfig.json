@@ -1,0 +1,36 @@
+{
+    "version": "0.0.1",
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "isolatedModules": false,
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "sourceMap": true
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "./**/*.d.ts",
+        "./typings/**/*.d.ts",
+        "!./node_modules/**/*",
+        "!./dist/**/*"
+    ],
+    "files": [
+        "./js/controller.ts",
+        "./js/module.ts",
+        "./typings/angularjs/angular.d.ts",
+        "./typings/jquery/jquery.d.ts",
+        "./typings/socket.io-client/socket.io-client.d.ts",
+        "./typings/tsd.d.ts"
+    ],
+    "atom": {
+        "rewriteTsconfig": true
+    }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "ConnectFour",
+  "version": "0.0.1",
+  "description": "SWA Assignment 2 - Connect Four",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.swa.univie.ac.at/submission/g2016s_swa_0204"
+  },
+  "keywords": [
+    "angular.js",
+    "angular",
+    "visualization",
+    "connectfour"
+  ],
+  "author": {
+    "name": "Katharina Kutschera"
+  },
+  "license": "GPL",
+  "readmeFilename": "README.md",
+  "engines": {
+    "node": ">=0.10.0",
+    "npm": ">=1.4.3"
+  },
+  "dependencies": {
+    "express": "^4.13.3"
+  },
+  "devDependencies": {
+    "preen": "^1.2.0",
+    "tsd": "^0.6.4"
+  }
+}

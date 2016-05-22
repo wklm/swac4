@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!--
+kathi.kutschera@gmx.at
+16.05.2016
+-->
+<html ng-app="ConnectFour">
+<head>
+  <title>Connect Four</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF8">
+
+  <!-- Angular -->
+  <script src="bower_components/angular/angular.js"></script>
+
+  <script src="bower_components/socket.io-client/socket.io.js"></script>
+
+  <!-- jquery needed by bootstrap.js -->
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+
+  <!-- bootstrap -->
+  <link href="bower_components/bootstrap/dist/css/bootstrap.css" media="all" rel="stylesheet">
+  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+
+  <!-- JavaScripts -->
+  <script src="js/module.js"></script>
+  <script src="js/controller.js"></script>
+
+  <link href="css/controller.css" media="all" rel="stylesheet">
+
+</head>
+<body ng-controller="controller">
+
+  <div class="container-fluid" ng-show="start">
+    <div class="row">
+      <div class="col-xs-3">
+        <form>
+          <input type="text" ng-model="name" class="form-control" placeholder="Name" required>
+          <p> <p>
+            <button class="btn btn-default" type="submit" ng-click="startPlaying()"> Play </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid" ng-show="play">
+      <div class="row">
+        <div class="col-xs-6">
+          <p> </p>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th ng-repeat="col in [0,1,2,3,4,5,6]">
+                  <img src="{{imgHeaderSources[header[col]]}}" class="img-responsive center-block" alt="White Circle" ng-click="drop(col)" ng-show="showArrowDown[col]" ng-disabled="header[col]">
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="row in [0,1,2,3,4,5]">
+                <td ng-repeat="column in [0,1,2,3,4,5,6]">
+                  <img ng-src="{{imageSources[fields[column][row]]}}" class="img-responsive center-block" alt="White Circle">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class = "row">
+        <div class="col-xs-6">
+          <button type="button" class="btn btn-default btn-lg" ng-Click="surrender()"> Surrender </button>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
