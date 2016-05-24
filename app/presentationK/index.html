@@ -31,14 +31,7 @@ kathi.kutschera@gmx.at
 </head>
 <body ng-controller="controller">
 
-  <div class="container-fluid" ng-show="start">
-    <div class="row">
-      <div class="alert alert-danger" role="alert" ng-show="errorName">
-        The name {{$scope.name}} is already taken. Please choose another one!
-      </div>
-    </div>
-  </div>
-
+  <!-- Start display -->
   <div class="container-fluid" ng-show="start">
     <div class="row">
       <div class="col-xs-6">
@@ -47,9 +40,16 @@ kathi.kutschera@gmx.at
     </div>
     <p> </p>
     <div class="row">
+      <p> </p>
+      <div class="col-xs-6">
+        <div class="alert alert-danger" role="alert" ng-show="nameError">
+          <b> This name is already taken! </b> Please choose another one!
+        </div>
+      </div>
+    </div>
+    <div class="row">
       <div class="col-xs-3">
         <form>
-          <p> </p>
           <label> Name: </label>
           <input type="text" ng-model="name" class="form-control" placeholder="Name" required>
           <p> </p>
@@ -62,6 +62,25 @@ kathi.kutschera@gmx.at
     </div>
   </div>
 
+  <!-- waiting for opponent -->
+  <div class="container-fluid" ng-show="waiting">
+    <div class="row">
+      <div class="col-xs-6">
+        <img src="../img/ConnectFourSm.jpg">
+      </div>
+    </div>
+    <p> </p>
+    <div class="row">
+      <p> </p>
+      <div class="col-xs-6">
+        <div class="alert alert-info" role="alert">
+          <b> Please Wait! </b> We try to find an opponent for you!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Field -->
   <div class="container-fluid" ng-show="play">
     <div class="row">
       <div class="col-xs-6">
@@ -77,7 +96,7 @@ kathi.kutschera@gmx.at
           <tbody>
             <tr ng-repeat="row in [0,1,2,3,4,5]">
               <td ng-repeat="column in [0,1,2,3,4,5,6]">
-                <img ng-src="{{imageSources[fields[column][row]]}}" class="img-responsive center-block" alt="White Circle">
+                <img ng-src="{{imageSources[fields[column][row]]}}" class="img-responsive center-block" alt="White Circle" ng-click="fields[column][row] === 3 && popout(column)">
               </td>
             </tr>
           </tbody>
@@ -96,6 +115,7 @@ kathi.kutschera@gmx.at
     </div>
   </div>
 
+  <!-- Success / Failure message -->
   <div class="container-fluid" ng-show="success">
     <div class="row">
       <div class="col-xs-6">

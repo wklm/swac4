@@ -6,10 +6,6 @@ var ConnectFour;
             this.$scope = $scope;
             var webSocketHost = "http://localhost:8000";
             var socket = io.connect(webSocketHost);
-            $scope.showArrowDown = [];
-            for (var i = 0; i < 7; i++) {
-                $scope.showArrowDown[i] = true;
-            }
             $scope.variants = [];
             $scope.variants[0] = "Standard";
             $scope.variants[1] = "Popout";
@@ -27,6 +23,7 @@ var ConnectFour;
             $scope.imageSources[0] = $scope.icons.white;
             $scope.imgHeaderSources = [];
             $scope.header = [];
+            $scope.showArrowDown = [];
             $scope.fields = [];
             for (var i = 0; i < 7; i++) {
                 $scope.fields[i] = [];
@@ -61,6 +58,18 @@ var ConnectFour;
                 $scope.safeApply();
             };
             $scope.popout = function (column) {
+                console.log("POPOUT: " + column);
+                var popCol = $scope.fields[column];
+                if (popCol[5] === 3) {
+                    popCol[5] = popCol[4];
+                    popCol[4] = popCol[3];
+                    popCol[3] = popCol[2];
+                    popCol[2] = popCol[1];
+                    popCol[1] = popCol[0];
+                    popCol[0] = 0;
+                    $scope.thisPlayersTurn(false);
+                    $scope.safeApply();
+                }
             };
             $scope.thisPlayersTurn = function (trueFalse) {
                 for (var i = 0; i < 7; i++) {
@@ -120,9 +129,13 @@ var ConnectFour;
             });
             socket.on('newUserName negative ack', function (name, socket) {
                 $scope.nameError = true;
+                console.log("NEGATIVE ACKNOWLEDGEMENT: " + name);
                 $scope.safeApply();
             });
             socket.on('waiting for opponent', function () {
+                $scope.start = false;
+                $scope.waiting = true;
+                $scope.safeApply();
                 console.log("Waiting for opponent");
             });
             socket.on('room initialized', function (roomID) {
@@ -130,8 +143,9 @@ var ConnectFour;
                 $scope.gameRoomID = roomID;
                 console.log("$scope.user.id % 2 === 0:" + ($scope.user.id % 2 === 0));
                 $scope.thisPlayersTurn($scope.user.id % 2 === 0);
-                $scope.play = true;
+                $scope.waiting = false;
                 $scope.start = false;
+                $scope.play = true;
                 $scope.safeApply();
             });
             socket.on('winner', function (userSocketID) {

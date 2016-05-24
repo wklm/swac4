@@ -37,6 +37,7 @@ module ConnectFour {
     messageInfo : {turn : string, info : string};
     variants : string[];
     selectedVariant : string;
+    waiting : boolean;
   }
 
   export class Controller {
@@ -50,18 +51,16 @@ module ConnectFour {
 
       var socket = io.connect(webSocketHost);
 
-      $scope.showArrowDown = [];
 
-      for(let i = 0; i < 7; i++){
-        $scope.showArrowDown[i] = true;
-      }
-
+      // set possible variants and default variant
       $scope.variants = [];
       $scope.variants[0] = "Standard";
       $scope.variants[1] = "Popout";
 
       $scope.selectedVariant = "Standard";
 
+
+      // set paths to icons
       $scope.icons = {
         white : "../img/circleWhite.png",
         blue : "../img/circleBlue.png",
@@ -78,6 +77,8 @@ module ConnectFour {
       $scope.imgHeaderSources = [];
       $scope.header = [];
 
+      $scope.showArrowDown = [];
+
 
       $scope.fields = [];
 
@@ -90,13 +91,13 @@ module ConnectFour {
         }
       }
 
-
+      // start Settings
       $scope.start = true;
       $scope.play = false;
       $scope.success = false;
       $scope.failure = false;
 
-
+      // drop Method
       $scope.drop = (column : number) => {
         console.log("Drop(" + column + ")");
 
@@ -113,7 +114,7 @@ module ConnectFour {
         }
       }
 
-
+      // drop Method for opponents drop
       $scope.opponentDrop = (column : number, row : number) => {
         console.log("OpponentDrop(" + column + ")");
 
@@ -126,11 +127,23 @@ module ConnectFour {
         $scope.safeApply();
       }
 
-
+      // popout drop Method
       $scope.popout = (column : number) => {
-
+        console.log("POPOUT: " + column);
+        let popCol = $scope.fields[column];
+        if(popCol[5] === 3){
+          popCol[5] = popCol[4];
+          popCol[4] = popCol[3];
+          popCol[3] = popCol[2];
+          popCol[2] = popCol[1];
+          popCol[1] = popCol[0];
+          popCol[0] = 0;
+          $scope.thisPlayersTurn(false);
+          $scope.safeApply();
+        }
       }
 
+      // Settings depending on which players turn it is
       $scope.thisPlayersTurn = (trueFalse : boolean) => {
         for(let i = 0; i < 7; i++){
           $scope.showArrowDown[i] = trueFalse;
@@ -151,15 +164,18 @@ module ConnectFour {
 
       }
 
+      // surrender Method
       $scope.surrender = () => {
         console.log("function surrender");
         socket.emit('leave room', $scope.gameRoomID, $scope.user.socket);
       }
 
 
+      // send user name, choosen variant and socketID to Business Logic Layer
       $scope.startPlaying = () => {
         if($scope.name != null){
           console.log("socket.id: " + socket.id);
+          // variant
           $scope.user = {id : null, name : $scope.name, socket : socket.id};
           console.log("User: " + JSON.stringify($scope.user));
           console.log("Variant: " + $scope.selectedVariant);
@@ -167,6 +183,8 @@ module ConnectFour {
         }
       }
 
+
+      // acknowledgement for user name
       socket.on('newUserName ack', (ack) => {
         var userAck = JSON.parse(ack);
         $scope.user.id = userAck.id;
@@ -196,25 +214,38 @@ module ConnectFour {
         }
       });
 
+
+      // negative acknowledgement for user name
       socket.on('newUserName negative ack', (name, socket) => {
         $scope.nameError = true;
+        console.log("NEGATIVE ACKNOWLEDGEMENT: " + name);
         $scope.safeApply();
       });
 
+
+      // waiting for opponent
       socket.on('waiting for opponent', () => {
+        $scope.start = false;
+        $scope.waiting = true;
+        $scope.safeApply();
         console.log("Waiting for opponent");
       });
 
+
+      // room initialized - start of Game
       socket.on('room initialized', (roomID) => {
         console.log("ROOM INITIALIZED");
         $scope.gameRoomID = roomID;
         console.log("$scope.user.id % 2 === 0:" + ($scope.user.id % 2 === 0));
         $scope.thisPlayersTurn($scope.user.id % 2 === 0);
-        $scope.play = true;
+        $scope.waiting = false;
         $scope.start = false;
+        $scope.play = true;
         $scope.safeApply();
       });
 
+
+      // info if someone has won
       socket.on('winner', (userSocketID) => {
         if(userSocketID === $scope.user.id){
           console.log("YOU WON!");
@@ -228,11 +259,14 @@ module ConnectFour {
         $scope.safeApply();
       });
 
+
+      // info if opponent has left the game (surrender)
       socket.on('opponent left', () => {
         console.log("OPPONENT LEFT!");
       });
 
 
+      // infos related to someones turn
       socket.on('grid update cell', (col, row, userSocketID) => {
         console.log("userSocketID: " + userSocketID);
         console.log("$scope.user.socket: " + $scope.user.socket);
@@ -244,6 +278,8 @@ module ConnectFour {
         }
       });
 
+
+      // Method for a safe apply - update of html page
       $scope.safeApply = () => {
         var phase = $scope.$root.$$phase;
         if (phase == '$apply' || phase == '$digest')

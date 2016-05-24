@@ -25,7 +25,7 @@ ioServer.on('connection', function (socket) {
         });
         BLSSocket.emit('newUserName ack', JSON.stringify(usersQueue[user.name]));
       } else {
-        BLSSocket.emit('newUserName negative ack'); //TODO: bls, pre
+        BLSSocket.emit('newUserName negative ack', user.name, user.socket); //TODO: bls, pre
       }
     } catch (e) {
       console.error(e);
