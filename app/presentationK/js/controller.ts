@@ -27,13 +27,16 @@ module ConnectFour {
     header: number[];
     surrender : () => void;
     nameError : boolean;
-    icons : {white : string, blue : string, red : string, blueArrowDown : string, redArrowDown : string};
+    icons : {white : string, blue : string, red : string, blueArrowDown : string, redArrowDown : string, redArrowDownLg : string, blueArrowDownLg : string};
     gameRoomID : number;
     thisPlayersTurn : (trueFalse : boolean) => void;
     user : {id : number, name : string, socket : string};
     safeApply : () => void;
     success : boolean;
     failure : boolean;
+    messageInfo : {turn : string, info : string};
+    variants : string[];
+    selectedVariant : string;
   }
 
   export class Controller {
@@ -53,13 +56,20 @@ module ConnectFour {
         $scope.showArrowDown[i] = true;
       }
 
+      $scope.variants = [];
+      $scope.variants[0] = "Standard";
+      $scope.variants[1] = "Popout";
+
+      $scope.selectedVariant = "Standard";
 
       $scope.icons = {
         white : "../img/circleWhite.png",
         blue : "../img/circleBlue.png",
         red : "../img/circleRed.png",
         blueArrowDown : "../img/circleBlueArrowDown.png",
-        redArrowDown : "../img/circleRedArrowDown.png"
+        redArrowDown : "../img/circleRedArrowDown.png",
+        blueArrowDownLg : "../img/circleBlueArrowDownLg.png",
+        redArrowDownLg : "../img/circleRedArrowDownLg.png"
       };
 
       $scope.imageSources = []
@@ -124,7 +134,18 @@ module ConnectFour {
       $scope.thisPlayersTurn = (trueFalse : boolean) => {
         for(let i = 0; i < 7; i++){
           $scope.showArrowDown[i] = trueFalse;
+          if(0 != $scope.fields[i][0]){
+            $scope.showArrowDown[i] = false;
+          }
+          if(trueFalse && "Popout" === $scope.selectedVariant && 1 === $scope.fields[i][5]){
+            $scope.fields[i][5] = 3;
+          }
           $scope.header[i] = 1;
+        }
+        if(trueFalse){
+          $scope.messageInfo = {turn : "Your turn!", info : "Please choose a row."};
+        } else {
+          $scope.messageInfo = {turn : "Your opponents turn!", info : "Please wait until it's your turn."};
         }
         console.log("$scope.showArrowDown" + JSON.stringify($scope.showArrowDown));
 
@@ -137,11 +158,11 @@ module ConnectFour {
 
 
       $scope.startPlaying = () => {
-        if(($scope.name != null) && ($scope.name != undefined)){
+        if($scope.name != null){
           console.log("socket.id: " + socket.id);
           $scope.user = {id : null, name : $scope.name, socket : socket.id};
           console.log("User: " + JSON.stringify($scope.user));
-
+          console.log("Variant: " + $scope.selectedVariant);
           socket.emit('new userName submit', $scope.user);
         }
       }
@@ -159,6 +180,7 @@ module ConnectFour {
           console.log("Player1")
           $scope.imageSources[1] = $scope.icons.red;
           $scope.imageSources[2] = $scope.icons.blue;
+          $scope.imageSources[3] = $scope.icons.redArrowDownLg;
 
           $scope.imgHeaderSources[1] = $scope.icons.redArrowDown;
           $scope.imgHeaderSources[2] = $scope.icons.blueArrowDown;
@@ -167,6 +189,7 @@ module ConnectFour {
           console.log("Player2")
           $scope.imageSources[1] = $scope.icons.blue;
           $scope.imageSources[2] = $scope.icons.red;
+          $scope.imageSources[3] = $scope.icons.blueArrowDownLg;
 
           $scope.imgHeaderSources[1] = $scope.icons.blueArrowDown;
           $scope.imgHeaderSources[2] = $scope.icons.redArrowDown;
@@ -214,8 +237,7 @@ module ConnectFour {
         console.log("userSocketID: " + userSocketID);
         console.log("$scope.user.socket: " + $scope.user.socket);
         if(userSocketID === $scope.user.id){
-
-          // do nothing
+          // do nothing, already done
         } else {
           $scope.opponentDrop(col, row);
           console.log("grid update cell: " + row);

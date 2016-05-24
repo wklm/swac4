@@ -10,12 +10,18 @@ var ConnectFour;
             for (var i = 0; i < 7; i++) {
                 $scope.showArrowDown[i] = true;
             }
+            $scope.variants = [];
+            $scope.variants[0] = "Standard";
+            $scope.variants[1] = "Popout";
+            $scope.selectedVariant = "Standard";
             $scope.icons = {
                 white: "../img/circleWhite.png",
                 blue: "../img/circleBlue.png",
                 red: "../img/circleRed.png",
                 blueArrowDown: "../img/circleBlueArrowDown.png",
-                redArrowDown: "../img/circleRedArrowDown.png"
+                redArrowDown: "../img/circleRedArrowDown.png",
+                blueArrowDownLg: "../img/circleBlueArrowDownLg.png",
+                redArrowDownLg: "../img/circleRedArrowDownLg.png"
             };
             $scope.imageSources = [];
             $scope.imageSources[0] = $scope.icons.white;
@@ -59,7 +65,19 @@ var ConnectFour;
             $scope.thisPlayersTurn = function (trueFalse) {
                 for (var i = 0; i < 7; i++) {
                     $scope.showArrowDown[i] = trueFalse;
+                    if (0 != $scope.fields[i][0]) {
+                        $scope.showArrowDown[i] = false;
+                    }
+                    if (trueFalse && "Popout" === $scope.selectedVariant && 1 === $scope.fields[i][5]) {
+                        $scope.fields[i][5] = 3;
+                    }
                     $scope.header[i] = 1;
+                }
+                if (trueFalse) {
+                    $scope.messageInfo = { turn: "Your turn!", info: "Please choose a row." };
+                }
+                else {
+                    $scope.messageInfo = { turn: "Your opponents turn!", info: "Please wait until it's your turn." };
                 }
                 console.log("$scope.showArrowDown" + JSON.stringify($scope.showArrowDown));
             };
@@ -68,10 +86,11 @@ var ConnectFour;
                 socket.emit('leave room', $scope.gameRoomID, $scope.user.socket);
             };
             $scope.startPlaying = function () {
-                if (($scope.name != null) && ($scope.name != undefined)) {
+                if ($scope.name != null) {
                     console.log("socket.id: " + socket.id);
                     $scope.user = { id: null, name: $scope.name, socket: socket.id };
                     console.log("User: " + JSON.stringify($scope.user));
+                    console.log("Variant: " + $scope.selectedVariant);
                     socket.emit('new userName submit', $scope.user);
                 }
             };
@@ -86,6 +105,7 @@ var ConnectFour;
                     console.log("Player1");
                     $scope.imageSources[1] = $scope.icons.red;
                     $scope.imageSources[2] = $scope.icons.blue;
+                    $scope.imageSources[3] = $scope.icons.redArrowDownLg;
                     $scope.imgHeaderSources[1] = $scope.icons.redArrowDown;
                     $scope.imgHeaderSources[2] = $scope.icons.blueArrowDown;
                 }
@@ -93,6 +113,7 @@ var ConnectFour;
                     console.log("Player2");
                     $scope.imageSources[1] = $scope.icons.blue;
                     $scope.imageSources[2] = $scope.icons.red;
+                    $scope.imageSources[3] = $scope.icons.blueArrowDownLg;
                     $scope.imgHeaderSources[1] = $scope.icons.blueArrowDown;
                     $scope.imgHeaderSources[2] = $scope.icons.redArrowDown;
                 }
