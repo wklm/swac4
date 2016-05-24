@@ -32,8 +32,15 @@ var currentRoomID = 0;
 
 ioServer.on('connection', function (socket) {
   socket.on('new userName submit', function (user, variant) {
-    user.chosenVariant = variant;
-    DASConnector.emit('new userName submit', user);
+    try {
+      if (!user.name) throw "no name provided";
+      if (!user.socket) throw "no user socket id provided";
+      if (variant !== 'standard' && variant !== 'popout') throw "invalid game variant";
+        user.chosenVariant = variant;
+        DASConnector.emit('new userName submit', user);
+    } catch (error) {
+      ioServer.sockets.connected['/#' + user.socket].emit("new userName submit error", error);
+    }
   });
 
   socket.on('newUserName ack', function (acknowledgedNewUser) {
