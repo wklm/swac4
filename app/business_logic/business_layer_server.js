@@ -33,7 +33,7 @@ var currentRoomID = 0;
 ioServer.on('connection', function (socket) {
   socket.on('new userName submit', function (user, variant) {
     try {
-      if (!user.name) throw "no name provided";
+      if (!user.name) throw "no user name provided";
       if (!user.socket) throw "no user socket id provided";
       if (variant !== 'standard' && variant !== 'popout') throw "invalid game variant";
         user.chosenVariant = variant;
@@ -64,8 +64,8 @@ ioServer.on('connection', function (socket) {
         gameVariant: activeUserPool[activeUserPool.length - 2].chosenVariant
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
-      ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id);
-      ioServer.sockets.connected['/#' + gameRoom.players[1].socket].emit('room initialized', gameRoom.id);
+      ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id, gameRoom.gameVariant);
+      ioServer.sockets.connected['/#' + gameRoom.players[1].socket].emit('room initialized', gameRoom.id, gameRoom.gameVariant);
       gameRoom = null;
     } else {
       ioServer.sockets.connected['/#' + user.socket].emit("waiting for opponent");
