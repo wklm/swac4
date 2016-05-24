@@ -92,8 +92,8 @@ ioServer.on('connection', function (socket) {
         case 'popout':
           if (cell === userSocketID && row === h - 1) {
             r.grid.popOut(); // update whole gird
-            rSockets['/#' + r.players[0].socket].emit("grid update all", r.grid);
-            rSockets['/#' + r.players[1].socket].emit("grid update all", r. grid);
+            rSockets['/#' + r.players[0].socket].emit("grid update all", col, userSocketID);
+            rSockets['/#' + r.players[1].socket].emit("grid update all", col, userSocketID);
             break;
           } else throw "can't popout element";
         default:
