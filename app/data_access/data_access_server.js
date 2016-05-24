@@ -21,7 +21,8 @@ ioServer.on('connection', function (socket) {
         usersQueue[user.name] = ({
           id: userID++,
           name: user.name,
-          socket : user.socket
+          socket: user.socket,
+          chosenVariant: user.chosenVariant
         });
         BLSSocket.emit('newUserName ack', JSON.stringify(usersQueue[user.name]));
       } else {

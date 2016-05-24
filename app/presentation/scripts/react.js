@@ -227,7 +227,7 @@ var Root = React.createClass({
       userName: user
     })
     user.socket = socket.id;
-    socket.emit('new userName submit', user);
+    socket.emit('new userName submit', user, "standard");
   },
 
   render: function () {

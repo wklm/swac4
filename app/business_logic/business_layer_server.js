@@ -31,7 +31,8 @@ var gameRoomsPool = [];
 var currentRoomID = 0;
 
 ioServer.on('connection', function (socket) {
-  socket.on('new userName submit', function (user) {
+  socket.on('new userName submit', function (user, variant) {
+    user.chosenVariant = variant;
     DASConnector.emit('new userName submit', user);
   });
 
@@ -53,7 +54,7 @@ ioServer.on('connection', function (socket) {
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
         winner: null,
-        gameVariant: null
+        gameVariant: activeUserPool[activeUserPool.length - 2].chosenVariant
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id);
@@ -69,6 +70,7 @@ ioServer.on('connection', function (socket) {
       pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket],
       cell = r.grid.get(row, col);
     let h = r.grid.getHeight() - 1;
+    console.log("variant", r.gameVariant);
     try {
       if (userSocketID === r.players[r.currentPlayerMove].socket) {
         throw("opponent's turn");
