@@ -77,11 +77,10 @@ ioServer.on('connection', function (socket) {
       pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket],
       cell = r.grid.get(row, col);
     let h = r.grid.getHeight() - 1;
-    console.log("variant", r.gameVariant);
     try {
-      if (userSocketID === r.players[r.currentPlayerMove].socket) {
-        throw("opponent's turn");
-      }
+      //if (userSocketID === r.players[r.currentPlayerMove].socket) {
+      //  throw("opponent's turn");
+      //}
       if (!cell) {
         r.grid.set(row, col, userSocketID); // update signle cell
         rSockets['/#' + r.players[0].socket].emit("grid update cell", col, row, userSocketID);
