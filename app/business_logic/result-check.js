@@ -8,7 +8,7 @@ var _ = require('lodash');
 
 BL.check = function (matrix, col, row, userSocketID) {
   let tempR = matrix.getRow(row), tempC = matrix.getColumn(col);
-  for (let c in tempR) {
+  for (let c in tempR) { // horizontal
     if ((_.isEqual(_.dropWhile(_.dropRightWhile(tempR, (c) => {
         return c !== userSocketID
       }), (c) => {
@@ -16,7 +16,7 @@ BL.check = function (matrix, col, row, userSocketID) {
       }), new Array(4).fill(userSocketID)))) return userSocketID;
     tempR = _.slice(matrix.getRow(row), c)
   }
-  for (let r in tempC) {
+  for (let r in tempC) { // vertical
     if (_.isEqual(_.dropWhile(_.dropRightWhile(tempC, (c) => {
         return c !== userSocketID
       }), (c) => {
