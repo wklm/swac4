@@ -67,7 +67,22 @@ var ConnectFour;
                     popCol[2] = popCol[1];
                     popCol[1] = popCol[0];
                     popCol[0] = 0;
+                    socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, 5);
                     $scope.thisPlayersTurn(false);
+                    $scope.safeApply();
+                }
+            };
+            $scope.opponentPopout = function (column) {
+                console.log("OPPONENT POPOUT: " + column);
+                var oppPopCol = $scope.fields[column];
+                if (oppPopCol[5] === 2) {
+                    oppPopCol[5] = oppPopCol[4];
+                    oppPopCol[4] = oppPopCol[3];
+                    oppPopCol[3] = oppPopCol[2];
+                    oppPopCol[2] = oppPopCol[1];
+                    oppPopCol[1] = oppPopCol[0];
+                    oppPopCol[0] = 0;
+                    $scope.thisPlayersTurn(true);
                     $scope.safeApply();
                 }
             };
@@ -77,8 +92,11 @@ var ConnectFour;
                     if (0 != $scope.fields[i][0]) {
                         $scope.showArrowDown[i] = false;
                     }
-                    if (trueFalse && "Popout" === $scope.selectedVariant && 1 === $scope.fields[i][5]) {
+                    if (trueFalse && "Popout" === $scope.gameVariant && 1 === $scope.fields[i][5]) {
                         $scope.fields[i][5] = 3;
+                    }
+                    if (!trueFalse && "Popout" === $scope.gameVariant && 3 === $scope.fields[i][5]) {
+                        $scope.fields[i][5] = 1;
                     }
                     $scope.header[i] = 1;
                 }
@@ -92,15 +110,15 @@ var ConnectFour;
             };
             $scope.surrender = function () {
                 console.log("function surrender");
-                socket.emit('leave room', $scope.gameRoomID, $scope.user.socket);
+                socket.emit('leave room', $scope.gameRoomID, $scope.user.id);
             };
             $scope.startPlaying = function () {
                 if ($scope.name != null) {
                     console.log("socket.id: " + socket.id);
-                    $scope.user = { id: null, name: $scope.name, socket: socket.id };
+                    $scope.user = { id: null, name: $scope.name, socket: socket.id, chosenVariant: $scope.selectedVariant };
                     console.log("User: " + JSON.stringify($scope.user));
                     console.log("Variant: " + $scope.selectedVariant);
-                    socket.emit('new userName submit', $scope.user);
+                    socket.emit('new userName submit', $scope.user, $scope.selectedVariant);
                 }
             };
             socket.on('newUserName ack', function (ack) {
@@ -138,9 +156,12 @@ var ConnectFour;
                 $scope.safeApply();
                 console.log("Waiting for opponent");
             });
-            socket.on('room initialized', function (roomID) {
+            socket.on('room initialized', function (roomID, gameVariant) {
                 console.log("ROOM INITIALIZED");
                 $scope.gameRoomID = roomID;
+                $scope.gameVariant = gameVariant;
+                console.log("gameVariant: " + gameVariant);
+                console.log("$scope.gameVariant: " + $scope.gameVariant);
                 console.log("$scope.user.id % 2 === 0:" + ($scope.user.id % 2 === 0));
                 $scope.thisPlayersTurn($scope.user.id % 2 === 0);
                 $scope.waiting = false;
@@ -168,10 +189,21 @@ var ConnectFour;
                 console.log("userSocketID: " + userSocketID);
                 console.log("$scope.user.socket: " + $scope.user.socket);
                 if (userSocketID === $scope.user.id) {
+                    console.log("own drop");
                 }
                 else {
                     $scope.opponentDrop(col, row);
                     console.log("grid update cell: " + row);
+                }
+            });
+            socket.on('grid update all', function (col, userSocketID) {
+                console.log("opponent Popout");
+                if (userSocketID === $scope.user.id) {
+                    console.log("own popout");
+                }
+                else {
+                    $scope.opponentPopout(col);
+                    console.log("opponent popout");
                 }
             });
             $scope.safeApply = function () {

@@ -35,7 +35,7 @@ ioServer.on('connection', function (socket) {
     try {
       if (!user.name) throw "no user name provided";
       if (!user.socket) throw "no user socket id provided";
-      if (variant !== 'standard' && variant !== 'popout') throw "invalid game variant";
+      if (variant !== 'Standard' && variant !== 'Popout') throw "invalid game variant";
         user.chosenVariant = variant;
         DASConnector.emit('new userName submit', user);
     } catch (error) {
@@ -52,7 +52,7 @@ ioServer.on('connection', function (socket) {
     ioServer.sockets.connected['/#' + socket].emit('newUserName negative ack', name);
   });
 
-  socket.on('user will join room', function (user) { // variant may be 'standard' or 'popout'
+  socket.on('user will join room', function (user) { // variant may be 'Standard' or 'Popout'
     activeUserPool.push(user);
     if (user.id % 2) {
       let gameRoom = {
@@ -76,19 +76,20 @@ ioServer.on('connection', function (socket) {
     const r = gameRoomsPool[room], rSockets = ioServer.sockets.connected,
       pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket],
       cell = r.grid.get(row, col);
+      console.log("CELL" + cell);
     let h = r.grid.getHeight() - 1;
     try {
-      if (userSocketID === r.players[r.currentPlayerMove].socket) {
+      if (userSocketID === r.players[r.currentPlayerMove].id) {
         throw("opponent's turn");
       }
-      if (!cell) {
+      if (cell === null) {
         r.grid.set(row, col, userSocketID); // update signle cell
         rSockets['/#' + r.players[0].socket].emit("grid update cell", col, row, userSocketID);
         rSockets['/#' + r.players[1].socket].emit("grid update cell", col, row, userSocketID);
       } else switch (r.gameVariant) {
-        case 'standard':
+        case 'Standard':
           throw "cell already occupied";
-        case 'popout':
+        case 'Popout':
           if (cell === userSocketID && row === h - 1) {
             r.grid.popOut(); // update whole gird
             rSockets['/#' + r.players[0].socket].emit("grid update all", col, userSocketID);
@@ -121,4 +122,3 @@ ioServer.on('connection', function (socket) {
 app.listen(app.get('port'), function () {
   console.log('Business Layer Server started: localhost:8000');
 });
-
