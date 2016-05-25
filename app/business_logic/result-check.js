@@ -7,15 +7,24 @@ var _ = require('lodash');
 
 
 BL.check = function (matrix, col, row, userSocketID) {
-  return (_.isEqual(_.dropWhile(_.dropRightWhile(matrix.getRow(row), (c) => {
-    return c !== userSocketID
-  }), (c) => {
-    return c !== userSocketID
-  }), new Array(4).fill(userSocketID))) || (_.isEqual(_.dropWhile(_.dropRightWhile(matrix.getColumn(col), (c) => {
-    return c !== userSocketID
-  }), (c) => {
-    return c !== userSocketID
-  }), new Array(4).fill(userSocketID))) || checkDiagonal(matrix, col, row, userSocketID) ? userSocketID : null;
+  let tempR = matrix.getRow(row), tempC = matrix.getColumn(col);
+  for (let c in tempR) {
+    if ((_.isEqual(_.dropWhile(_.dropRightWhile(tempR, (c) => {
+        return c !== userSocketID
+      }), (c) => {
+        return c !== userSocketID
+      }), new Array(4).fill(userSocketID)))) return userSocketID;
+    tempR = _.slice(matrix.getRow(row), c)
+  }
+  for (let r in tempC) {
+    if (_.isEqual(_.dropWhile(_.dropRightWhile(tempC, (c) => {
+        return c !== userSocketID
+      }), (c) => {
+        return c !== userSocketID
+      }), new Array(4).fill(userSocketID))) return userSocketID;
+    tempC = _.slice(matrix.getColumn(col), r)
+  }
+  return checkDiagonal(matrix, col, row, userSocketID) ? userSocketID : null;
 };
 
 function checkDiagonal(matrix, col, row, userSocketID) {
