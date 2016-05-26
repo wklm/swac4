@@ -87,7 +87,6 @@ ioServer.on('connection', function (socket) {
         r.grid.set(row, col, userSocketID); // update signle cell
         rSockets['/#' + r.players[0].socket].emit("grid update cell", col, row, userSocketID);
         rSockets['/#' + r.players[1].socket].emit("grid update cell", col, row, userSocketID);
-        console.log("init", r.grid, "\n");
       } else switch (r.gameVariant) {
         case 'Standard':
           throw "cell already occupied";
@@ -119,7 +118,7 @@ ioServer.on('connection', function (socket) {
 
   socket.on('leave room', function (room, userSocketID) { // leave the room
     const r = gameRoomsPool[room], rSockets = ioServer.sockets.connected;
-    let opponent = userSocketID === r.players[0].socket ? r.players[1].socket : userSocketID;
+    let opponent = userSocketID === r.players[0].socket ? r.players[1].socket : r.players[0].socket;
     rSockets['/#' + opponent].emit("opponent left");
     rSockets['/#' + userSocketID].disconnect();
   });
