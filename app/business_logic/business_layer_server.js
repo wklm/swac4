@@ -36,8 +36,8 @@ ioServer.on('connection', function (socket) {
       if (!user.name) throw "no user name provided";
       if (!user.socket) throw "no user socket id provided";
       if (variant !== 'Standard' && variant !== 'Popout') throw "invalid game variant";
-        user.chosenVariant = variant;
-        DASConnector.emit('new userName submit', user);
+      user.chosenVariant = variant;
+      DASConnector.emit('new userName submit', user);
     } catch (error) {
       ioServer.sockets.connected['/#' + user.socket].emit("new userName submit error", error);
     }
@@ -61,7 +61,7 @@ ioServer.on('connection', function (socket) {
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
         winner: null,
-        gameVariant: activeUserPool[activeUserPool.length - 2].chosenVariant
+        gameVariant: 'Popout' // activeUserPool[activeUserPool.length - 2].chosenVariant
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id, gameRoom.gameVariant);
@@ -73,11 +73,12 @@ ioServer.on('connection', function (socket) {
   });
 
   socket.on("user click", function (room, userSocketID, col, row) {
+
     const r = gameRoomsPool[room], rSockets = ioServer.sockets.connected,
       pSocIDs = ['/#' + r.players[0].socket, '/#' + r.players[1].socket],
       cell = r.grid.get(row, col);
-      console.log("CELL" + cell);
     let h = r.grid.getHeight() - 1;
+
     try {
       if (userSocketID === r.players[r.currentPlayerMove].id) {
         throw("opponent's turn");
@@ -86,12 +87,16 @@ ioServer.on('connection', function (socket) {
         r.grid.set(row, col, userSocketID); // update signle cell
         rSockets['/#' + r.players[0].socket].emit("grid update cell", col, row, userSocketID);
         rSockets['/#' + r.players[1].socket].emit("grid update cell", col, row, userSocketID);
+        console.log("init", r.grid, "\n");
       } else switch (r.gameVariant) {
         case 'Standard':
           throw "cell already occupied";
         case 'Popout':
           if (cell === userSocketID && row === h - 1) {
-            r.grid.popOut(); // update whole gird
+            for (let i = 5; i > 0; --i) {
+              r.grid.set(i, col, r.grid.get(i - 1, col));
+            }
+            r.grid.set(0, col, null);
             rSockets['/#' + r.players[0].socket].emit("grid update all", col, userSocketID);
             rSockets['/#' + r.players[1].socket].emit("grid update all", col, userSocketID);
             break;
@@ -107,7 +112,7 @@ ioServer.on('connection', function (socket) {
       }
       r.currentPlayerMove = +!r.currentPlayerMove;
     } catch (boardClickErr) {
-      console.error(boardClickErr);
+      console.error(boardClickErr, error.stack);
       rSockets['/#' + userSocketID].emit("board click error", boardClickErr);
     }
   });
