@@ -61,7 +61,7 @@ ioServer.on('connection', function (socket) {
         grid: new f2dA(7, 7, null),
         currentPlayerMove: 1,
         winner: null,
-        gameVariant: 'Popout' // activeUserPool[activeUserPool.length - 2].chosenVariant
+        gameVariant: activeUserPool[activeUserPool.length - 2].chosenVariant
       } // 7x7 size hack because of lib bug
       gameRoomsPool.push(gameRoom);
       ioServer.sockets.connected['/#' + gameRoom.players[0].socket].emit('room initialized', gameRoom.id, gameRoom.gameVariant);
