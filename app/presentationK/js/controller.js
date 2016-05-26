@@ -35,13 +35,15 @@ var ConnectFour;
             $scope.play = false;
             $scope.success = false;
             $scope.failure = false;
+            $scope.opponentLeft = false;
+            $scope.youGaveUp = false;
             $scope.drop = function (column) {
                 console.log("Drop(" + column + ")");
                 var col = $scope.fields[column];
                 for (var row = 5; row >= 0; row--) {
                     if (!col[row]) {
                         col[row] = 1;
-                        socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, row);
+                        socket.emit('user click', $scope.gameRoomID, $scope.user.socket, column, row);
                         $scope.thisPlayersTurn(false);
                         break;
                     }
@@ -67,7 +69,7 @@ var ConnectFour;
                     popCol[2] = popCol[1];
                     popCol[1] = popCol[0];
                     popCol[0] = 0;
-                    socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, 5);
+                    socket.emit('user click', $scope.gameRoomID, $scope.user.socket, column, 5);
                     $scope.thisPlayersTurn(false);
                     $scope.safeApply();
                 }
@@ -110,7 +112,9 @@ var ConnectFour;
             };
             $scope.surrender = function () {
                 console.log("function surrender");
-                socket.emit('leave room', $scope.gameRoomID, $scope.user.id);
+                $scope.thisPlayersTurn(false);
+                $scope.youGaveUp = true;
+                socket.emit('leave room', $scope.gameRoomID, $scope.user.socket);
             };
             $scope.startPlaying = function () {
                 if ($scope.name != null) {
@@ -170,7 +174,7 @@ var ConnectFour;
                 $scope.safeApply();
             });
             socket.on('winner', function (userSocketID) {
-                if (userSocketID === $scope.user.id) {
+                if (userSocketID === $scope.user.socket) {
                     console.log("YOU WON!");
                     $scope.success = true;
                     $scope.thisPlayersTurn(false);
@@ -184,11 +188,14 @@ var ConnectFour;
             });
             socket.on('opponent left', function () {
                 console.log("OPPONENT LEFT!");
+                $scope.opponentLeft = true;
+                $scope.thisPlayersTurn(false);
+                $scope.safeApply();
             });
             socket.on('grid update cell', function (col, row, userSocketID) {
                 console.log("userSocketID: " + userSocketID);
                 console.log("$scope.user.socket: " + $scope.user.socket);
-                if (userSocketID === $scope.user.id) {
+                if (userSocketID === $scope.user.socket) {
                     console.log("own drop");
                 }
                 else {
@@ -198,7 +205,7 @@ var ConnectFour;
             });
             socket.on('grid update all', function (col, userSocketID) {
                 console.log("opponent Popout");
-                if (userSocketID === $scope.user.id) {
+                if (userSocketID === $scope.user.socket) {
                     console.log("own popout");
                 }
                 else {

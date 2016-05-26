@@ -40,6 +40,8 @@ module ConnectFour {
     selectedVariant : string;
     waiting : boolean;
     gameVariant : string;
+    opponentLeft : boolean;
+    youGaveUp : boolean;
   }
 
   export class Controller {
@@ -98,6 +100,8 @@ module ConnectFour {
       $scope.play = false;
       $scope.success = false;
       $scope.failure = false;
+      $scope.opponentLeft = false;
+      $scope.youGaveUp = false;
 
       // drop Method
       $scope.drop = (column : number) => {
@@ -109,7 +113,7 @@ module ConnectFour {
           // find first free space
           if(!col[row]){
             col[row] = 1;
-            socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, row);
+            socket.emit('user click', $scope.gameRoomID, $scope.user.socket, column, row);
             $scope.thisPlayersTurn(false);
             break;
           }
@@ -140,7 +144,7 @@ module ConnectFour {
           popCol[2] = popCol[1];
           popCol[1] = popCol[0];
           popCol[0] = 0;
-          socket.emit('user click', $scope.gameRoomID, $scope.user.id, column, 5);
+          socket.emit('user click', $scope.gameRoomID, $scope.user.socket, column, 5);
           $scope.thisPlayersTurn(false);
           $scope.safeApply();
         }
@@ -189,7 +193,9 @@ module ConnectFour {
       // surrender Method
       $scope.surrender = () => {
         console.log("function surrender");
-        socket.emit('leave room', $scope.gameRoomID, $scope.user.id);
+        $scope.thisPlayersTurn(false);
+        $scope.youGaveUp = true;
+        socket.emit('leave room', $scope.gameRoomID, $scope.user.socket);
       }
 
 
@@ -272,7 +278,7 @@ module ConnectFour {
 
       // info if someone has won
       socket.on('winner', (userSocketID) => {
-        if(userSocketID === $scope.user.id){
+        if(userSocketID === $scope.user.socket){
           console.log("YOU WON!");
           $scope.success = true;
           $scope.thisPlayersTurn(false);
@@ -288,6 +294,9 @@ module ConnectFour {
       // info if opponent has left the game (surrender)
       socket.on('opponent left', () => {
         console.log("OPPONENT LEFT!");
+        $scope.opponentLeft = true;
+        $scope.thisPlayersTurn(false);
+        $scope.safeApply();
       });
 
 
@@ -295,7 +304,7 @@ module ConnectFour {
       socket.on('grid update cell', (col, row, userSocketID) => {
         console.log("userSocketID: " + userSocketID);
         console.log("$scope.user.socket: " + $scope.user.socket);
-        if(userSocketID === $scope.user.id){
+        if(userSocketID === $scope.user.socket){
           console.log("own drop");
         } else {
           $scope.opponentDrop(col, row);
@@ -305,7 +314,7 @@ module ConnectFour {
 
       socket.on('grid update all', (col, userSocketID) => {
         console.log("opponent Popout");
-        if(userSocketID === $scope.user.id){
+        if(userSocketID === $scope.user.socket){
           console.log("own popout");
         } else {
           $scope.opponentPopout(col);

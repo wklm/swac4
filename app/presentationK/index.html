@@ -103,24 +103,44 @@ kathi.kutschera@gmx.at
         </table>
       </div>
     </div>
-    <div class="row"  ng-hide="success || failure">
+    <div class="row"  ng-hide="success || failure || opponentLeft || youGaveUp">
       <div class="col-xs-6">
         <div class="alert alert-warning" role="alert"><b>{{messageInfo.turn}}</b>  {{messageInfo.info}}</div>
       </div>
     </div>
-    <div class="row"  ng-hide="success || failure">
+    <div class="row"  ng-hide="success || failure || opponentLeft || youGaveUp">
       <div class="col-xs-3">
         <button type="button" class="btn btn-default btn-lg" ng-Click="surrender()"> Surrender </button>
       </div>
     </div>
   </div>
 
-  <!-- Success / Failure message -->
-  <div class="container-fluid" ng-show="success">
+  <!-- Success/Failure message | You|Opponent Gave Up Info-->
+  <div class="container-fluid" ng-show="opponentLeft">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="alert alert-info" role="alert">
+          <b> Oh no! :( </b> Your opponent has left this game! <b> But: </b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" ng-show="youGaveUp">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="alert alert-info" role="alert">
+          <b> You gave up! :( </b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" ng-show="success || opponentLeft">
     <div class="row">
       <div class="col-xs-6">
         <div class="alert alert-success" role="alert">
-          <b> Well done! :) </b> You've won this game!
+          <b> Congratulations! :) </b> You've won this game!
         </div>
       </div>
     </div>
