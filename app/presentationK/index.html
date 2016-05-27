@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!--
+kathi.kutschera@gmx.at
+16.05.2016
+-->
+<html ng-app="ConnectFour">
+<head>
+  <title>Connect Four</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF8">
+
+  <!-- Angular -->
+  <script src="bower_components/angular/angular.js"></script>
+
+  <script src="bower_components/socket.io-client/socket.io.js"></script>
+
+  <!-- jquery needed by bootstrap.js -->
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+
+  <!-- bootstrap -->
+  <link href="bower_components/bootstrap/dist/css/bootstrap.css" media="all" rel="stylesheet">
+  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+
+  <!-- JavaScripts -->
+  <script src="js/module.js"></script>
+  <script src="js/controller.js"></script>
+
+  <link href="css/controller.css" media="all" rel="stylesheet">
+
+</head>
+<body ng-controller="controller">
+
+  <!-- Start display -->
+  <div class="container-fluid" ng-show="start">
+    <div class="row">
+      <div class="col-xs-6">
+        <img src="../img/ConnectFourSm.jpg">
+      </div>
+    </div>
+    <p> </p>
+    <div class="row">
+      <p> </p>
+      <div class="col-xs-6">
+        <div class="alert alert-danger" role="alert" ng-show="nameError">
+          <b> This name is already taken! </b> Please choose another one!
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">
+        <form>
+          <label> Name: </label>
+          <input type="text" ng-model="name" class="form-control" placeholder="Name" required>
+          <p> </p>
+          <label> Game Variant: </label>
+          <select class="form-control" ng-model="selectedVariant" ng-options="v for v in variants" ></select>
+          <p> </p>
+          <button class="btn btn-primary" type="submit" ng-click="startPlaying()"> Play </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- waiting for opponent -->
+  <div class="container-fluid" ng-show="waiting">
+    <div class="row">
+      <div class="col-xs-6">
+        <img src="../img/ConnectFourSm.jpg">
+      </div>
+    </div>
+    <p> </p>
+    <div class="row">
+      <p> </p>
+      <div class="col-xs-6">
+        <div class="alert alert-info" role="alert">
+          <b> Please Wait! </b> We try to find an opponent for you!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Field -->
+  <div class="container-fluid" ng-show="play">
+    <div class="row">
+      <div class="col-xs-6">
+        <p> </p>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th ng-repeat="col in [0,1,2,3,4,5,6]">
+                <img src="{{imgHeaderSources[header[col]]}}" class="img-responsive center-block" alt="White Circle" ng-click="drop(col)" ng-show="showArrowDown[col]" ng-disabled="header[col]">
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="row in [0,1,2,3,4,5]">
+              <td ng-repeat="column in [0,1,2,3,4,5,6]">
+                <img ng-src="{{imageSources[fields[column][row]]}}" class="img-responsive center-block" alt="White Circle" ng-click="fields[column][row] === 3 && popout(column)">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row"  ng-hide="success || failure || opponentLeft || youGaveUp">
+      <div class="col-xs-6">
+        <div class="alert alert-warning" role="alert"><b>{{messageInfo.turn}}</b>  {{messageInfo.info}}</div>
+      </div>
+    </div>
+    <div class="row"  ng-hide="success || failure || opponentLeft || youGaveUp">
+      <div class="col-xs-3">
+        <button type="button" class="btn btn-default btn-lg" ng-Click="surrender()"> Surrender </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Failure message | You|Opponent Gave Up Info-->
+  <div class="container-fluid" ng-show="opponentLeft">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="alert alert-info" role="alert">
+          <b> Oh no! :( </b> Your opponent has left this game! <b> But: </b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" ng-show="youGaveUp">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="alert alert-info" role="alert">
+          <b> You gave up! :( </b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" ng-show="success || opponentLeft">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="alert alert-success" role="alert">
+          <b> Congratulations! :) </b> You've won this game!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" ng-show="failure">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="alert alert-danger" role="alert">
+          <b> Oh snap! :( </b> Your opponent has won this game!
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

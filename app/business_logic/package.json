@@ -1,0 +1,29 @@
+{
+  "name": "swa_connect_four",
+  "version": "0.0.1",
+  "description": "business layer",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.13.4",
+    "fixed-2d-array": "^1.2.0",
+    "path": "^0.12.7",
+    "socket.io": "^1.4.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "test",
+    "start": "node business_layer_server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.swa.univie.ac.at/submission/g2016s_swa_0204"
+  },
+  "keywords": [
+    "connect",
+    "four",
+    "swa",
+    "assignment"
+  ],
+  "author": "Wojciech Kulma",
+  "license": "ISC"
+}

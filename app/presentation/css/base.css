@@ -1,0 +1,18 @@
+.grid {
+    background: lightblue;
+}
+
+.cell {
+    background: lightcoral;
+    width: 5rem;
+    height: 5rem;
+    line-height: 5rem;
+    text-align: -webkit-center;
+    border: 1px solid lightgrey;
+    border-radius: 50%;
+    font-size: 2rem;
+}
+
+.left {
+    float: left !important;
+}
